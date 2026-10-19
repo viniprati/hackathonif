@@ -1,15 +1,20 @@
-Na tela inicial não poderá haver os dados 'ALIMENTOS, ESCOLAS e DISTRIBUIÇÃO'
+4 associações
+mercadoria vem em um montante
+umaa pessoa pega e distribui
+não possui método de deistribuição 
+distribur para 50 escolas
 
-Esses cards deverão aparecer logo após o usuário realizar o clique no montante (que possui a data do lado e fica logo abaixo do calendário) e a partir dele irá abrir esse card irá aparecer os cards com esses itens que serão realocados.
+ex: chegou 100kg de mercadoria distribuiria para as 50 escolas de forma mais fácil
 
-Após abrir essa nova tela eles poderão clicar nesses cards que abrirá um pop-up com a devida informação 
+distribuição proporcional 
+a nutricionista realiza a solicitação com base no cardápio 
 
-Criar uma lista definida de alimentos para não ter a opção de criar algum alimento que não exista. 
+Aprucas
+Aprovista - escopo focado nesse
+Aproder
+CAFC
 
-Criar botão para na hora que sobrar alimento perguntar se quer realmente prosseguir que abrirá em um popup não permitindo mexer em outra parte da tela se não cancelar ou confirmar, e caso confirme irá aparecer um botão para informar se a sobra foi realmente sobra ou se houve perda, até poruqe são alimentos perecíveis. 
+Manter um controle com tags de pendente e concluido 
 
-Quando aparecer a distribuição para as escolas não poder editar o nome das escolas e nem adicionar escolas pois eles terão a lista de escolas já formadas para isso, e pode ser que a escola não tenha realizado o pedido então podera ficar branco. 
+Soma de tudo 
 
-Montar uma aba de relatório para ver os alimentos, taxa de perdas, sobra e distribuição. 
-
-Montagem de documentos baseados em notas fiscais originais conforme anexados porque haverão preços, ai seria interessante um documento gerado em pdf para ver a situação financeira de cada semana ou de cada mês
