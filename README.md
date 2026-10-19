@@ -43,6 +43,15 @@ flutter test
 
 Antes de levar `develop` para `main`, execute `dart analyze` e `flutter test` e revise as telas afetadas.
 
+## Colaboradores
+
+- [@viniprati](https://github.com/viniprati)
+- [@ceciliadumer](https://github.com/ceciliadumer)
+- [@catharinescheffler](https://github.com/catharinescheffler)
+- [@anabeatrizmanga](https://github.com/anabeatrizmanga)
+
+Em commits feitos em conjunto, registre cada colaborador adicional com um trailer `Co-authored-by` usando o endereço associado à conta no GitHub.
+
 ## Versões
 
 O aplicativo usa versionamento semântico no `pubspec.yaml`: `MAJOR.MINOR.PATCH+BUILD`. A versão atual, `0.1.0+1`, identifica o protótipo em desenvolvimento e ainda não é uma release.
