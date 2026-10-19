@@ -22,6 +22,12 @@ class ProductSummary {
         (total, delivery) => total + delivery.distributedKg,
       );
   double get unallocatedKg => receivedKg - distributedKg;
+  double get lossKg => deliveries
+      .where((item) => item.status == DeliveryStatus.completed)
+      .fold<double>(0, (sum, item) => sum + (item.lossKg ?? 0));
+  double get surplusKg => deliveries
+      .where((item) => item.status == DeliveryStatus.completed)
+      .fold<double>(0, (sum, item) => sum + item.surplusKg);
   int get schoolCount => deliveries
       .expand((delivery) => delivery.allocations)
       .where((allocation) => allocation.allocatedKg > 0)

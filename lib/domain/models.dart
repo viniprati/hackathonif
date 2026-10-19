@@ -8,10 +8,16 @@ class SchoolRequest {
 }
 
 class BatchItem {
-  const BatchItem({required this.product, required this.availableKg});
+  const BatchItem(
+      {required this.product,
+      required this.availableKg,
+      this.unitPriceCents,
+      this.invoiceNumber});
 
   final String product;
   final double availableKg;
+  final int? unitPriceCents;
+  final String? invoiceNumber;
 }
 
 class Allocation {
@@ -36,6 +42,9 @@ class Delivery {
     this.batchId = 0,
     this.batchName = '',
     this.status = DeliveryStatus.pending,
+    this.unitPriceCents,
+    this.invoiceNumber,
+    this.lossKg,
   });
 
   final int id;
@@ -46,6 +55,16 @@ class Delivery {
   final int batchId;
   final String batchName;
   final DeliveryStatus status;
+  final int? unitPriceCents;
+  final String? invoiceNumber;
+  // null indica saldo ainda não classificado; zero indica sobra aproveitável.
+  final double? lossKg;
+
+  double get remainderKg =>
+      (availableKg - distributedKg).clamp(0, availableKg).toDouble();
+  double get surplusKg => lossKg == null
+      ? 0
+      : (remainderKg - lossKg!).clamp(0, availableKg).toDouble();
 
   double get distributedKg =>
       allocations.fold<double>(0, (sum, item) => sum + item.allocatedKg);
@@ -61,9 +80,13 @@ class Delivery {
         batchId: batchId,
         batchName: batchName,
         status: value,
+        unitPriceCents: unitPriceCents,
+        invoiceNumber: invoiceNumber,
+        lossKg: lossKg,
       );
 
-  Delivery withAllocations(List<Allocation> value, {DeliveryStatus? status}) =>
+  Delivery withAllocations(List<Allocation> value,
+          {DeliveryStatus? status, double? recordedLossKg}) =>
       Delivery(
         id: id,
         product: product,
@@ -73,5 +96,8 @@ class Delivery {
         batchId: batchId,
         batchName: batchName,
         status: status ?? this.status,
+        unitPriceCents: unitPriceCents,
+        invoiceNumber: invoiceNumber,
+        lossKg: recordedLossKg,
       );
 }
