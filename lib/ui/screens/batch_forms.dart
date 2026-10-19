@@ -44,6 +44,7 @@ class _NewBatchDialogState extends State<NewBatchDialog> {
   final _form = GlobalKey<FormState>();
   final _name = TextEditingController();
   final _items = [_ItemInputs()];
+  final _participatingSchools = <String>{};
   DateTime _date = DateTime.now();
   String? _invoiceNumber;
 
@@ -118,6 +119,66 @@ class _NewBatchDialogState extends State<NewBatchDialog> {
                     label: Text('Data: ${formatDate(_date)}'),
                   ),
                   const SizedBox(height: 12),
+                  FormField<List<String>>(
+                    initialValue: const [],
+                    autovalidateMode: AutovalidateMode.onUserInteraction,
+                    validator: (value) => value == null || value.isEmpty
+                        ? 'Selecione pelo menos uma escola participante.'
+                        : null,
+                    builder: (field) => Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        const Text('Escolas participantes',
+                            style: TextStyle(
+                                fontSize: 18, fontWeight: FontWeight.bold)),
+                        const Text(
+                            'Selecione as escolas que participarão deste montante. A escolha vale para todos os alimentos.'),
+                        Text(
+                            '${_participatingSchools.length} ${_participatingSchools.length == 1 ? 'escola selecionada' : 'escolas selecionadas'}'),
+                        for (final school in widget.viewModel.knownSchools)
+                          CheckboxListTile(
+                            key: ValueKey('batch-school-$school'),
+                            contentPadding: EdgeInsets.zero,
+                            controlAffinity: ListTileControlAffinity.leading,
+                            title: Text(school),
+                            value: _participatingSchools.contains(school),
+                            onChanged: (selected) => setState(() {
+                              if (selected == true) {
+                                _participatingSchools.add(school);
+                              } else {
+                                _participatingSchools.remove(school);
+                              }
+                              field.didChange(_participatingSchools.toList());
+                            }),
+                          ),
+                        Wrap(children: [
+                          TextButton(
+                              onPressed: () => setState(() {
+                                    _participatingSchools
+                                        .addAll(widget.viewModel.knownSchools);
+                                    field.didChange(
+                                        _participatingSchools.toList());
+                                  }),
+                              child: const Text('Selecionar todas')),
+                          TextButton(
+                              onPressed: () => setState(() {
+                                    _participatingSchools.clear();
+                                    field.didChange(const []);
+                                  }),
+                              child: const Text('Limpar seleção')),
+                        ]),
+                        if (field.hasError)
+                          Semantics(
+                              liveRegion: true,
+                              child: Text(field.errorText!,
+                                  style: TextStyle(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .error))),
+                        const SizedBox(height: 12),
+                      ],
+                    ),
+                  ),
                   DropdownButtonFormField<String>(
                     initialValue: _invoiceNumber ?? '',
                     isExpanded: true,
@@ -247,6 +308,8 @@ class _NewBatchDialogState extends State<NewBatchDialog> {
                           widget.viewModel.addBatch(
                               name: _name.text.trim(),
                               date: _date,
+                              participatingSchools:
+                                  _participatingSchools.toList(),
                               items: [
                                 for (final item in _items)
                                   BatchItem(
@@ -295,7 +358,7 @@ class _AllocationScreenState extends State<AllocationScreen> {
     super.initState();
     _delivery = widget.viewModel.deliveries
         .firstWhere((item) => item.id == widget.deliveryId);
-    for (final school in widget.viewModel.knownSchools) {
+    for (final school in widget.viewModel.schoolsForDelivery(_delivery)) {
       final requested = _delivery.allocations
           .where((item) => item.school == school)
           .fold<double>(0, (sum, item) => sum + item.requestedKg);
@@ -342,7 +405,7 @@ class _AllocationScreenState extends State<AllocationScreen> {
           const Text('Pedidos das escolas',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
           const Text(
-              'Deixe em branco quando não houver pedido. A soma dos pedidos não pode ultrapassar o recebido.',
+              'Somente as escolas participantes deste montante aparecem aqui. Deixe em branco quando não houver pedido deste alimento. A soma não pode ultrapassar o recebido.',
               style: TextStyle(color: NativaColors.gray)),
           const SizedBox(height: 12),
           Form(

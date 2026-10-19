@@ -19,6 +19,8 @@ class DeliveryViewModel extends ChangeNotifier {
   List<Delivery> get deliveries => _repository.getAll();
   List<BatchSummary> get batches => summarizeBatches(deliveries);
   List<String> get knownSchools => _repository.knownSchools;
+  List<String> schoolsForDelivery(Delivery delivery) =>
+      _repository.schoolsForDelivery(delivery);
   List<FoodCatalogItem> get foods => foodCatalog;
   List<InvoiceReference> get invoices => invoiceReferences;
   StockReport report(ReportPeriod period, DateTime reference) => StockReport(
@@ -75,8 +77,13 @@ class DeliveryViewModel extends ChangeNotifier {
     required String name,
     required DateTime date,
     required List<BatchItem> items,
+    List<String>? participatingSchools,
   }) {
-    final id = _repository.addBatch(name: name, date: date, items: items);
+    final id = _repository.addBatch(
+        name: name,
+        date: date,
+        items: items,
+        participatingSchools: participatingSchools);
     notifyListeners();
     return id;
   }

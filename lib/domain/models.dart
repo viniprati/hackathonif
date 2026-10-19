@@ -45,6 +45,7 @@ class Delivery {
     this.unitPriceCents,
     this.invoiceNumber,
     this.lossKg,
+    this.participatingSchools,
   });
 
   final int id;
@@ -59,6 +60,8 @@ class Delivery {
   final String? invoiceNumber;
   // null indica saldo ainda não classificado; zero indica sobra aproveitável.
   final double? lossKg;
+  // null identifica registros anteriores à seleção de participantes.
+  final List<String>? participatingSchools;
 
   double get remainderKg =>
       (availableKg - distributedKg).clamp(0, availableKg).toDouble();
@@ -83,6 +86,7 @@ class Delivery {
         unitPriceCents: unitPriceCents,
         invoiceNumber: invoiceNumber,
         lossKg: lossKg,
+        participatingSchools: participatingSchools,
       );
 
   Delivery withAllocations(List<Allocation> value,
@@ -99,5 +103,6 @@ class Delivery {
         unitPriceCents: unitPriceCents,
         invoiceNumber: invoiceNumber,
         lossKg: recordedLossKg,
+        participatingSchools: participatingSchools,
       );
 }

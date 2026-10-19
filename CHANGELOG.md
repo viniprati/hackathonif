@@ -1,5 +1,10 @@
 # Histórico de versões
 
+## Em desenvolvimento
+
+- Seleção das escolas participantes no cadastro do montante, com lista filtrada nos detalhes e no rateio de todos os alimentos.
+- Validação impede pedidos de escolas não participantes e preserva a seleção ao salvar e reabrir a distribuição.
+
 ## 1.0.2+3 — 19/10/2026
 
 - Relatórios na tela e no PDF agrupados por alimento, com soma dos recebimentos, valores parciais e distribuição por escola. PDF em tabelas sem gráficos.

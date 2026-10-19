@@ -85,11 +85,24 @@ class DeliveryRepository {
 
   List<String> get knownSchools => List.unmodifiable(schoolCatalog);
 
+  List<String> schoolsForDelivery(Delivery delivery) =>
+      delivery.participatingSchools ?? knownSchools;
+
   int addBatch({
     required String name,
     required DateTime date,
     required List<BatchItem> items,
+    List<String>? participatingSchools,
   }) {
+    final selected = participatingSchools ?? knownSchools;
+    if (selected.isEmpty ||
+        selected.toSet().length != selected.length ||
+        selected.any((school) => !schoolCatalog.contains(school))) {
+      throw ArgumentError(
+          'Selecione ao menos uma escola cadastrada, sem repetições.');
+    }
+    final schools =
+        List<String>.unmodifiable(schoolCatalog.where(selected.contains));
     final batchName = name.trim();
     if (batchName.isEmpty || items.isEmpty) {
       throw ArgumentError('Informe o nome do montante e ao menos um alimento.');
@@ -120,7 +133,6 @@ class DeliveryRepository {
       }
     }
     final batchId = _nextBatchId++;
-    final schools = knownSchools;
     for (final item in items.reversed) {
       _deliveries.insert(
         0,
@@ -138,6 +150,7 @@ class DeliveryRepository {
           unitPriceCents: item.unitPriceCents,
           invoiceNumber: item.invoiceNumber,
           useCatalogPrice: false,
+          participatingSchools: schools,
         ),
       );
     }
@@ -185,12 +198,13 @@ class DeliveryRepository {
   }) {
     final index = _deliveries.indexWhere((delivery) => delivery.id == id);
     if (index < 0) throw ArgumentError.value(id, 'id');
+    final schools = schoolsForDelivery(_deliveries[index]);
     _validateRequestTotal(_deliveries[index].availableKg, requests);
     final normalizedNames = <String>{};
     final cleanRequests = <SchoolRequest>[];
     for (final request in requests) {
       final name = request.school.trim();
-      if (!schoolCatalog.contains(name) ||
+      if (!schools.contains(name) ||
           !normalizedNames.add(name.toLowerCase()) ||
           !request.requestedKg.isFinite ||
           request.requestedKg < 0 ||
@@ -205,7 +219,7 @@ class DeliveryRepository {
     }
     final delivery = _deliveries[index];
     final completeRequests = [
-      for (final school in schoolCatalog)
+      for (final school in schools)
         SchoolRequest(
             school: school,
             requestedKg: cleanRequests
@@ -253,9 +267,11 @@ class DeliveryRepository {
     int? unitPriceCents,
     String? invoiceNumber,
     bool useCatalogPrice = true,
+    List<String>? participatingSchools,
   }) =>
       Delivery(
         id: id,
+        participatingSchools: participatingSchools,
         batchId: batchId,
         batchName: batchName,
         product: product,

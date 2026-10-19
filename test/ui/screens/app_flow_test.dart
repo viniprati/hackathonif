@@ -64,6 +64,7 @@ void main() {
     }
     await tester.pumpAndSettle();
     await tester.ensureVisible(find.text('Salvar rateio'));
+    await tester.pumpAndSettle();
     expect(find.textContaining('Limite excedido'), findsNothing);
     await tester.tap(find.text('Salvar rateio'));
     await tester.pumpAndSettle();
@@ -95,6 +96,7 @@ void main() {
     await tester.enterText(find.byKey(const Key('school-quantity-IFES')), '60');
     await tester.pumpAndSettle();
     await tester.ensureVisible(find.text('Salvar rateio'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Salvar rateio'));
     await tester.pumpAndSettle();
     expect(find.text('Confirmar saldo de alimento'), findsOneWidget);
@@ -159,6 +161,10 @@ void main() {
     await tester.enterText(
         find.widgetWithText(TextFormField, 'Nome do montante'),
         'Feira de outubro');
+    await tester.ensureVisible(find.text('Selecionar todas'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Selecionar todas'));
+    await tester.pumpAndSettle();
     await selectFood(tester, 'Alimento 1', 'Aipim');
     await tester.enterText(find.widgetWithText(TextFormField, 'Kg'), '40');
     await tester.ensureVisible(find.text('Adicionar alimento'));
