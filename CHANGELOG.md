@@ -9,4 +9,8 @@
 - Dashboard de produtos com totais, busca e acesso aos lotes.
 - Fluxo de montantes com vários alimentos, busca, filtros e rateio por escola com saldo visível.
 
+- Catálogo fechado com os alimentos das notas; escolas fixas e pedidos opcionais.
+- Confirmação obrigatória do saldo e classificação de sobra e perda.
+- Relatórios semanais e mensais com valores, taxa de perdas e PDF gerencial.
+
 Ainda não há uma versão publicada ou tag de release.

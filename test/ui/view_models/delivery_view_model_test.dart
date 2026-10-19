@@ -14,8 +14,8 @@ void main() {
       availableKg: 10,
       date: DateTime(2026, 10, 20),
       requests: const [
-        SchoolRequest(school: 'Escola A', requestedKg: 8),
-        SchoolRequest(school: 'Escola B', requestedKg: 12),
+        SchoolRequest(school: 'IFES', requestedKg: 8),
+        SchoolRequest(school: 'Pinto Coelho', requestedKg: 12),
       ],
     );
 

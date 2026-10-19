@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 
-import '../../domain/models.dart';
 import '../theme.dart';
 import '../view_models/delivery_view_model.dart';
 import 'batch_screen.dart';
 import 'home_screen.dart';
 import 'products_screen.dart';
+import 'reports_screen.dart';
 
 class AppShell extends StatefulWidget {
   const AppShell({super.key, required this.viewModel, required this.onSignOut});
@@ -27,11 +27,10 @@ class _AppShellState extends State<AppShell> {
             HomeScreen(
               viewModel: widget.viewModel,
               openBatches: () => setState(() => _index = 1),
-              openProducts: () => setState(() => _index = 2),
             ),
             BatchesScreen(viewModel: widget.viewModel),
             ProductsScreen(viewModel: widget.viewModel),
-            DocumentsScreen(viewModel: widget.viewModel),
+            ReportsScreen(viewModel: widget.viewModel),
             ProfileScreen(onSignOut: widget.onSignOut),
           ];
           final destinations = const [
@@ -53,7 +52,7 @@ class _AppShellState extends State<AppShell> {
             NavigationDestination(
               icon: Icon(Icons.description_outlined),
               selectedIcon: Icon(Icons.description),
-              label: 'Documentos',
+              label: 'Relatórios',
             ),
             NavigationDestination(
               icon: Icon(Icons.person_outline),
@@ -94,7 +93,7 @@ class _AppShellState extends State<AppShell> {
                         NavigationRailDestination(
                           icon: Icon(Icons.description_outlined),
                           selectedIcon: Icon(Icons.description),
-                          label: Text('Documentos'),
+                          label: Text('Relatórios'),
                         ),
                         NavigationRailDestination(
                           icon: Icon(Icons.person_outline),
@@ -117,65 +116,6 @@ class _AppShellState extends State<AppShell> {
                   ),
           );
         },
-      );
-}
-
-class DocumentsScreen extends StatelessWidget {
-  const DocumentsScreen({super.key, required this.viewModel});
-  final DeliveryViewModel viewModel;
-
-  @override
-  Widget build(BuildContext context) => ListenableBuilder(
-        listenable: viewModel,
-        builder: (context, _) => Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 760),
-            child: ListView(
-              padding: const EdgeInsets.all(20),
-              children: [
-                const Text(
-                  'Documentos',
-                  style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 4),
-                const Text('Resumo dos lotes cadastrados neste protótipo.'),
-                const SizedBox(height: 20),
-                ...viewModel.deliveries.map(
-                  (delivery) => Card(
-                    child: ListTile(
-                      leading: const CircleAvatar(
-                        backgroundColor: NativaColors.lightGreen,
-                        child: Icon(
-                          Icons.receipt_long_outlined,
-                          color: NativaColors.darkGreen,
-                        ),
-                      ),
-                      title: Text('Lote #${delivery.id} • ${delivery.product}'),
-                      subtitle: Text(
-                        '${formatDate(delivery.date)}  •  ${delivery.schoolCount} escolas  •  ${formatKg(delivery.distributedKg)}',
-                      ),
-                      trailing: Icon(
-                        delivery.status == DeliveryStatus.completed
-                            ? Icons.check_circle
-                            : Icons.schedule,
-                        color: delivery.status == DeliveryStatus.completed
-                            ? NativaColors.green
-                            : NativaColors.terracotta,
-                      ),
-                    ),
-                  ),
-                ),
-                const Padding(
-                  padding: EdgeInsets.all(12),
-                  child: Text(
-                    'Comprovantes assinados e exportação serão incluídos quando houver armazenamento e contas reais.',
-                    style: TextStyle(color: NativaColors.gray),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
       );
 }
 

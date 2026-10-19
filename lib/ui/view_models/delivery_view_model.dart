@@ -4,6 +4,10 @@ import '../../data/delivery_repository.dart';
 import '../../domain/batch_summary.dart';
 import '../../domain/models.dart';
 import '../../domain/product_summary.dart';
+import '../../domain/catalog.dart';
+import '../../domain/invoice_reference.dart';
+import '../../domain/allocation_preview.dart';
+import '../../domain/stock_report.dart';
 
 class DeliveryViewModel extends ChangeNotifier {
   DeliveryViewModel(this._repository);
@@ -15,6 +19,17 @@ class DeliveryViewModel extends ChangeNotifier {
   List<Delivery> get deliveries => _repository.getAll();
   List<BatchSummary> get batches => summarizeBatches(deliveries);
   List<String> get knownSchools => _repository.knownSchools;
+  List<FoodCatalogItem> get foods => foodCatalog;
+  List<InvoiceReference> get invoices => invoiceReferences;
+  StockReport report(ReportPeriod period, DateTime reference) => StockReport(
+        period: period,
+        reference: reference,
+        deliveries: deliveries,
+        invoices: invoices,
+      );
+  AllocationPreview previewRequests(int id, List<SchoolRequest> requests) =>
+      AllocationPreview(
+          deliveries.firstWhere((item) => item.id == id).availableKg, requests);
   int get pendingBatchCount =>
       batches.where((batch) => !batch.isCompleted).length;
   List<ProductSummary> get products => summarizeProducts(deliveries);
@@ -66,8 +81,14 @@ class DeliveryViewModel extends ChangeNotifier {
     return id;
   }
 
-  void saveRequests(int deliveryId, List<SchoolRequest> requests) {
-    _repository.setRequests(deliveryId, requests);
+  void saveRequests(
+    int deliveryId,
+    List<SchoolRequest> requests, {
+    bool remainderConfirmed = false,
+    double? lossKg,
+  }) {
+    _repository.setRequests(deliveryId, requests,
+        remainderConfirmed: remainderConfirmed, lossKg: lossKg);
     notifyListeners();
   }
 

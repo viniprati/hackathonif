@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 
 import '../../domain/batch_summary.dart';
-import '../../domain/models.dart';
 import '../theme.dart';
 import '../view_models/delivery_view_model.dart';
 import 'batch_forms.dart';
+import 'batch_details_screen.dart';
+export 'batch_details_screen.dart';
 
 enum _BatchFilter { all, pending, completed }
 
@@ -236,99 +237,5 @@ class BatchCard extends StatelessWidget {
             ),
           ),
         ),
-      );
-}
-
-class BatchDetailsScreen extends StatefulWidget {
-  const BatchDetailsScreen({
-    super.key,
-    required this.viewModel,
-    required this.batchId,
-  });
-
-  final DeliveryViewModel viewModel;
-  final int batchId;
-
-  @override
-  State<BatchDetailsScreen> createState() => _BatchDetailsScreenState();
-}
-
-class _BatchDetailsScreenState extends State<BatchDetailsScreen> {
-  int? _selectedDeliveryId;
-
-  @override
-  Widget build(BuildContext context) => ListenableBuilder(
-        listenable: widget.viewModel,
-        builder: (context, _) {
-          final batch = widget.viewModel.batches.firstWhere(
-            (item) => item.id == widget.batchId,
-          );
-          return Scaffold(
-            appBar: AppBar(title: const Text('Montante')),
-            body: Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 760),
-                child: ListView(
-                  padding: const EdgeInsets.all(20),
-                  children: [
-                    Text(
-                      batch.name,
-                      style: const TextStyle(
-                        fontSize: 25,
-                        fontWeight: FontWeight.bold,
-                        color: NativaColors.darkGreen,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(formatDate(batch.date)),
-                    const SizedBox(height: 20),
-                    const Text(
-                      'Selecione o alimento que deseja separar',
-                      style:
-                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 12),
-                    for (final delivery in batch.deliveries)
-                      Card(
-                        child: CheckboxListTile(
-                          key: Key('batch-product-${delivery.id}'),
-                          value: _selectedDeliveryId == delivery.id,
-                          onChanged: (_) => setState(() {
-                            _selectedDeliveryId =
-                                _selectedDeliveryId == delivery.id
-                                    ? null
-                                    : delivery.id;
-                          }),
-                          title: Text(delivery.product),
-                          subtitle: Text(
-                            '${formatKg(delivery.availableKg)} • ${delivery.status == DeliveryStatus.completed ? 'Finalizado' : 'Pendente'}',
-                          ),
-                          secondary: const Icon(
-                            Icons.eco_outlined,
-                            color: NativaColors.green,
-                          ),
-                        ),
-                      ),
-                    const SizedBox(height: 16),
-                    FilledButton.icon(
-                      onPressed: _selectedDeliveryId == null
-                          ? null
-                          : () => Navigator.of(context).push(
-                                MaterialPageRoute<void>(
-                                  builder: (_) => AllocationScreen(
-                                    viewModel: widget.viewModel,
-                                    deliveryId: _selectedDeliveryId!,
-                                  ),
-                                ),
-                              ),
-                      icon: const Icon(Icons.call_split),
-                      label: const Text('Dividir entre escolas'),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          );
-        },
       );
 }

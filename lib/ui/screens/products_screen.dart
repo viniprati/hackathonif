@@ -168,7 +168,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
                               crossAxisCount: wide ? 2 : 1,
                               crossAxisSpacing: 12,
                               mainAxisSpacing: 12,
-                              mainAxisExtent: 225,
+                              mainAxisExtent: 255,
                             ),
                             itemBuilder: (context, index) {
                               final product = visible[index];
@@ -307,10 +307,15 @@ class _ProductCard extends StatelessWidget {
                           label: 'Rateado', value: product.distributedKg)),
                   Expanded(
                       child: _Amount(
-                          label: 'Sem rateio', value: product.unallocatedKg)),
+                          label: 'Sem distribuição',
+                          value: product.unallocatedKg)),
                 ],
               ),
               const SizedBox(height: 12),
+              Text(
+                  'Sobra: ${formatKg(product.surplusKg)} • Perda: ${formatKg(product.lossKg)}',
+                  style: const TextStyle(fontSize: 12)),
+              const SizedBox(height: 8),
               LinearProgressIndicator(
                 value: progress,
                 minHeight: 6,
@@ -428,7 +433,10 @@ class ProductDetailsScreen extends StatelessWidget {
                                 _DetailMetric('Recebido', product.receivedKg),
                                 _DetailMetric('Rateado', product.distributedKg),
                                 _DetailMetric(
-                                    'Sem rateio', product.unallocatedKg),
+                                    'Sem distribuição', product.unallocatedKg),
+                                _DetailMetric(
+                                    'Sobra aproveitável', product.surplusKg),
+                                _DetailMetric('Perda', product.lossKg),
                               ],
                             ),
                           ],
