@@ -19,10 +19,10 @@ O Nativa é voltado às pessoas que organizam essa distribuição em associaçõ
 - **Cadastro de montantes:** nome, data, alimentos selecionados do catálogo fechado, quantidade em kg, preço por kg e nota de referência opcional. O catálogo contém somente os 10 alimentos distintos das duas notas fornecidas, incluindo as variedades orgânicas.
 - **Consulta de montantes:** busca por nome, alimento ou escola e filtros de pendentes e finalizados.
 - **Divisão por alimento:** apenas os pedidos em kg são editáveis. As escolas são predefinidas; um campo em branco representa ausência de pedido.
-- **Rateio proporcional:** cálculo em unidades de 0,1 kg, respeitando o recebido e o pedido de cada escola, com prévia de sobra ou falta.
+- **Validação dos pedidos:** quantidades em unidades de 0,1 kg e bloqueio quando a soma dos pedidos ultrapassa o recebido, com aviso do excesso. A regra é aplicada no formulário e na camada de dados.
 - **Acompanhamento do rateio:** detalhes por escola e atualização dos status ao salvar. Se houver saldo, uma confirmação bloqueia a tela até cancelar ou confirmar; depois, é necessário informar quanto foi sobra aproveitável e quanto foi perda.
-- **Dashboard de produtos:** agrupamento de lotes por nome de produto, totais recebidos, rateados e sem rateio, busca, filtros por status e acesso aos detalhes dos lotes.
-- **Relatórios:** filtros semanal e mensal, distribuição por escola, quantidades recebidas, pendências, sobras, perdas e taxa de perdas. Incluem valores dos alimentos com preço informado e exportação em PDF para visualizar, baixar ou imprimir.
+- **Dashboard de produtos:** agrupamento de lotes por nome de produto, totais recebidos, rateados e sem rateio, busca, filtros por status e acesso aos detalhes dos lotes. Os três indicadores abrem o catálogo, os recebimentos por produto e os rateios por escola.
+- **Relatórios:** gráficos de pizza do destino dos alimentos, colunas de recebido e distribuído por alimento e barras horizontais por escola; filtros semanal e mensal, distribuição por escola, quantidades recebidas, pendências, sobras, perdas e taxa de perdas. A tela e o PDF consolidam os recebimentos por alimento, com quantidades, valores e distribuição por escola. Os valores somam os preços de cada recebimento; subtotais com preços ausentes ficam sinalizados como parciais. O PDF usa tabelas sem gráficos e pode ser visualizado, baixado ou impresso.
 - **Notas de referência:** itens, preços e totais transcritos de duas DANFEs fornecidas, separados dos totais dos montantes para evitar dupla contagem.
 - **Perfil:** dados fixos de demonstração com opção de sair.
 - **Interface em português do Brasil:** navegação inferior em telas menores e lateral em telas maiores.
@@ -30,7 +30,7 @@ O Nativa é voltado às pessoas que organizam essa distribuição em associaçõ
 
 Um **montante** reúne vários alimentos. Cada alimento é registrado como um **lote** com seus pedidos e quantidades rateadas. Salvar o rateio finaliza esse alimento; o montante fica finalizado quando todos os seus alimentos estão finalizados. Esse status representa o registro do rateio, sem comprovar uma entrega física.
 
-Quando há menos alimento que o solicitado, o cálculo divide o recebido proporcionalmente aos pedidos. Quando há mais, cada escola recebe até o que pediu e a sobra permanece indicada. A implementação está em [proportional_allocation.dart](lib/domain/proportional_allocation.dart).
+A soma dos pedidos deve ser menor ou igual à quantidade recebida. Se exceder, o usuário precisa revisar os pedidos antes de salvar. Quando há saldo, ele deve ser classificado como sobra aproveitável ou perda. O cálculo em unidades de 0,1 kg está em [proportional_allocation.dart](lib/domain/proportional_allocation.dart). Os gráficos usam os dados do período selecionado; os detalhamentos por alimento podem ser expandidos na tela.
 
 ## Tecnologias e dependências
 

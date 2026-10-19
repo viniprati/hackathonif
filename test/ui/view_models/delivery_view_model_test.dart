@@ -14,8 +14,8 @@ void main() {
       availableKg: 10,
       date: DateTime(2026, 10, 20),
       requests: const [
-        SchoolRequest(school: 'IFES', requestedKg: 8),
-        SchoolRequest(school: 'Pinto Coelho', requestedKg: 12),
+        SchoolRequest(school: 'IFES', requestedKg: 4),
+        SchoolRequest(school: 'Pinto Coelho', requestedKg: 6),
       ],
     );
 
@@ -31,22 +31,22 @@ void main() {
     model.dispose();
   });
 
-  test('saving school requests caps allocation and completes one food', () {
+  test('saving valid school requests completes one food', () {
     final model = DeliveryViewModel(DeliveryRepository());
 
     model.saveRequests(1, const [
       SchoolRequest(school: 'IFES', requestedKg: 50),
       SchoolRequest(school: 'Pinto Coelho', requestedKg: 30),
-      SchoolRequest(school: 'Darllin', requestedKg: 40),
+      SchoolRequest(school: 'Darllin', requestedKg: 20),
     ]);
 
     final aipim = model.deliveries.firstWhere((item) => item.id == 1);
     expect(aipim.status, DeliveryStatus.completed);
     expect(aipim.distributedKg, 100);
     expect(aipim.allocations.map((item) => item.allocatedKg), [
-      41.7,
-      25,
-      33.3,
+      50,
+      30,
+      20,
     ]);
     expect(model.pendingBatchCount, 1);
     model.dispose();

@@ -58,13 +58,13 @@ void main() {
     expect(find.byType(AlertDialog), findsOneWidget);
     await tester.tap(find.text('Dividir Aipim'));
     await tester.pumpAndSettle();
-    final values = [50, 30, 40];
+    final values = [50, 30, 20];
     for (var i = 0; i < values.length; i++) {
       await tester.enterText(find.byType(TextFormField).at(i), '${values[i]}');
     }
     await tester.pumpAndSettle();
     await tester.ensureVisible(find.text('Salvar rateio'));
-    expect(find.textContaining('Faltam 20,0 kg'), findsOneWidget);
+    expect(find.textContaining('Limite excedido'), findsNothing);
     await tester.tap(find.text('Salvar rateio'));
     await tester.pumpAndSettle();
     expect(find.text('2 alimentos pendentes'), findsOneWidget);

@@ -154,6 +154,7 @@ class DeliveryRepository {
         requests.any((request) => !schoolCatalog.contains(request.school))) {
       throw ArgumentError('Use apenas alimentos e escolas cadastrados.');
     }
+    _validateRequestTotal(availableKg, requests);
     final delivery = _seed(
       _nextDeliveryId++,
       _nextBatchId++,
@@ -167,6 +168,15 @@ class DeliveryRepository {
     return delivery;
   }
 
+  void _validateRequestTotal(double availableKg, List<SchoolRequest> requests) {
+    final total =
+        requests.fold<double>(0, (sum, item) => sum + item.requestedKg);
+    if (!total.isFinite || total > availableKg + 1e-7) {
+      throw ArgumentError(
+          'A soma dos pedidos não pode ultrapassar o alimento recebido.');
+    }
+  }
+
   void setRequests(
     int id,
     List<SchoolRequest> requests, {
@@ -175,6 +185,7 @@ class DeliveryRepository {
   }) {
     final index = _deliveries.indexWhere((delivery) => delivery.id == id);
     if (index < 0) throw ArgumentError.value(id, 'id');
+    _validateRequestTotal(_deliveries[index].availableKg, requests);
     final normalizedNames = <String>{};
     final cleanRequests = <SchoolRequest>[];
     for (final request in requests) {
