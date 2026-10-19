@@ -325,8 +325,6 @@ class _MetricCard extends StatelessWidget {
                   Icon(icon, color: NativaColors.darkGreen, size: 22),
                   const SizedBox(height: 10),
                   Text(label, style: const TextStyle(fontSize: 12)),
-                  const Text('Ver detalhes',
-                      style: TextStyle(decoration: TextDecoration.underline)),
                   Text(
                     value,
                     style: const TextStyle(
