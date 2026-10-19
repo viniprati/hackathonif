@@ -5,6 +5,7 @@ import '../theme.dart';
 import '../view_models/delivery_view_model.dart';
 import 'delivery_screen.dart';
 import 'home_screen.dart';
+import 'products_screen.dart';
 
 class AppShell extends StatefulWidget {
   const AppShell({super.key, required this.viewModel, required this.onSignOut});
@@ -25,9 +26,10 @@ class _AppShellState extends State<AppShell> {
           final pages = [
             HomeScreen(
               viewModel: widget.viewModel,
-              openDeliveries: () => setState(() => _index = 1),
-              openDocuments: () => setState(() => _index = 2),
+              openDeliveries: () => setState(() => _index = 2),
+              openProducts: () => setState(() => _index = 1),
             ),
+            ProductsScreen(viewModel: widget.viewModel),
             DeliveryScreen(viewModel: widget.viewModel),
             DocumentsScreen(viewModel: widget.viewModel),
             ProfileScreen(onSignOut: widget.onSignOut),
@@ -37,6 +39,11 @@ class _AppShellState extends State<AppShell> {
               icon: Icon(Icons.home_outlined),
               selectedIcon: Icon(Icons.home),
               label: 'Início',
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.inventory_2_outlined),
+              selectedIcon: Icon(Icons.inventory_2),
+              label: 'Produtos',
             ),
             NavigationDestination(
               icon: Icon(Icons.local_shipping_outlined),
@@ -73,6 +80,11 @@ class _AppShellState extends State<AppShell> {
                           icon: Icon(Icons.home_outlined),
                           selectedIcon: Icon(Icons.home),
                           label: Text('Início'),
+                        ),
+                        NavigationRailDestination(
+                          icon: Icon(Icons.inventory_2_outlined),
+                          selectedIcon: Icon(Icons.inventory_2),
+                          label: Text('Produtos'),
                         ),
                         NavigationRailDestination(
                           icon: Icon(Icons.local_shipping_outlined),

@@ -7,7 +7,8 @@ A marca usada nas telas está em `assets/images/nativa_logo.png`. O ícone quadr
 ## O que já funciona
 
 - Acesso de demonstração com qualquer CPF de 11 dígitos e senha não vazia.
-- Painel com calendário navegável, filtro por dia, atividades com status e atalhos para entregas e documentos.
+- Painel com calendário navegável, filtro por dia, atividades com status e atalhos para entregas e produtos.
+- Dashboard de produtos com totais recebidos e rateados, busca, status e acesso aos lotes.
 - Cadastro de lote com produto, quantidade recebida, data e pedidos por escola, incluindo colagem de listas para dezenas de escolas.
 - Rateio proporcional aos pedidos, limitado à quantidade recebida e ao pedido de cada escola, com precisão de 0,1 kg.
 - Lista e detalhe das entregas, com status pendente ou concluído.
