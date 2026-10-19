@@ -5,6 +5,7 @@ import 'data/delivery_repository.dart';
 import 'ui/screens/app_shell.dart';
 import 'ui/screens/login_screen.dart';
 import 'ui/theme.dart';
+import 'ui/text_size_controls.dart';
 import 'ui/view_models/delivery_view_model.dart';
 
 void main() => runApp(const NativaApp());
@@ -21,6 +22,7 @@ class _NativaAppState extends State<NativaApp> {
     DeliveryRepository(),
   );
   bool _signedIn = false;
+  int _textSizeStep = 0;
 
   @override
   void dispose() {
@@ -33,6 +35,31 @@ class _NativaAppState extends State<NativaApp> {
         title: 'Nativa',
         debugShowCheckedModeBanner: false,
         theme: nativaTheme(),
+        builder: (context, child) {
+          final media = MediaQuery.of(context);
+          return Overlay.wrap(
+            child: Column(
+              children: [
+                TextSizeControls(
+                  step: _textSizeStep,
+                  onChanged: (step) => setState(() => _textSizeStep = step),
+                ),
+                Expanded(
+                  child: MediaQuery(
+                    data: media.copyWith(
+                      padding: media.padding.copyWith(top: 0),
+                      textScaler: ReaderTextScaler(
+                        media.textScaler,
+                        1 + _textSizeStep * 0.2,
+                      ),
+                    ),
+                    child: child!,
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
         locale: const Locale('pt', 'BR'),
         supportedLocales: const [Locale('pt', 'BR')],
         localizationsDelegates: const [

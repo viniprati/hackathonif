@@ -100,7 +100,11 @@ class _ReportsScreenState extends State<ReportsScreen> {
                         ]),
                         const SizedBox(height: 12),
                         LayoutBuilder(builder: (context, constraints) {
-                          final columns = constraints.maxWidth >= 750 ? 3 : 2;
+                          final scale =
+                              MediaQuery.textScalerOf(context).scale(14) / 14;
+                          final columns = scale > 1.3
+                              ? 1
+                              : (constraints.maxWidth >= 750 ? 3 : 2);
                           final width =
                               (constraints.maxWidth - 10 * (columns - 1)) /
                                   columns;
@@ -307,11 +311,9 @@ class _Metric extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(label, style: const TextStyle(fontSize: 12)),
-                    FittedBox(
-                        fit: BoxFit.scaleDown,
-                        child: Text(formatKg(kg),
-                            style: const TextStyle(
-                                fontSize: 19, fontWeight: FontWeight.bold))),
+                    Text(formatKg(kg),
+                        style: const TextStyle(
+                            fontSize: 19, fontWeight: FontWeight.bold)),
                     Text(formatMoney(cents),
                         style: const TextStyle(fontSize: 12)),
                   ]))));

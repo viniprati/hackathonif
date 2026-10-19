@@ -23,6 +23,7 @@ class _AppShellState extends State<AppShell> {
   Widget build(BuildContext context) => LayoutBuilder(
         builder: (context, constraints) {
           final wide = constraints.maxWidth >= 700;
+          final largeText = MediaQuery.textScalerOf(context).scale(14) > 18.2;
           final pages = [
             HomeScreen(
               viewModel: widget.viewModel,
@@ -66,6 +67,7 @@ class _AppShellState extends State<AppShell> {
                 children: [
                   if (wide)
                     NavigationRail(
+                      scrollable: true,
                       selectedIndex: _index,
                       onDestinationSelected: (index) =>
                           setState(() => _index = index),
@@ -108,12 +110,40 @@ class _AppShellState extends State<AppShell> {
             ),
             bottomNavigationBar: wide
                 ? null
-                : NavigationBar(
-                    selectedIndex: _index,
-                    onDestinationSelected: (index) =>
-                        setState(() => _index = index),
-                    destinations: destinations,
-                  ),
+                : largeText
+                    ? SafeArea(
+                        top: false,
+                        child: PopupMenuButton<int>(
+                          tooltip: 'Navegar entre páginas',
+                          onSelected: (index) => setState(() => _index = index),
+                          itemBuilder: (_) => [
+                            for (var i = 0; i < destinations.length; i++)
+                              PopupMenuItem(
+                                value: i,
+                                child: Text(destinations[i].label),
+                              ),
+                          ],
+                          child: Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.menu),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                    child: Text(
+                                        'Navegar: ${destinations[_index].label}')),
+                                const Icon(Icons.expand_more),
+                              ],
+                            ),
+                          ),
+                        ),
+                      )
+                    : NavigationBar(
+                        selectedIndex: _index,
+                        onDestinationSelected: (index) =>
+                            setState(() => _index = index),
+                        destinations: destinations,
+                      ),
           );
         },
       );
@@ -173,7 +203,7 @@ class ProfileScreen extends StatelessWidget {
                     ListTile(
                       leading: Icon(Icons.info_outline),
                       title: Text('Versão'),
-                      subtitle: Text('Protótipo 0.1.0'),
+                      subtitle: Text('Versão 1.0.1'),
                     ),
                   ],
                 ),

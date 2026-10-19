@@ -43,7 +43,11 @@ void main() {
     expect(find.text('ALIMENTOS'), findsNothing);
     expect(find.text('ESCOLAS'), findsNothing);
     expect(find.text('DISTRIBUIÇÃO'), findsNothing);
-    await tester.ensureVisible(find.text('Dia das Crianças'));
+    await Scrollable.ensureVisible(
+        tester.element(find.text('Dia das Crianças')),
+        alignment: 0.5);
+
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Dia das Crianças'));
     await tester.pumpAndSettle();
     expect(find.text('ALIMENTOS'), findsOneWidget);
