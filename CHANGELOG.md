@@ -2,6 +2,7 @@
 
 ## Em desenvolvimento — 0.1.0+1
 
+- Controles globais de tamanho das letras, com ampliação até 200% e respeito à fonte do aparelho; calendário e indicadores adaptados para leitura ampliada.
 - Protótipo Flutter da Nativa com login de demonstração.
 - Cadastro de lotes e rateio proporcional de alimentos por escola.
 - Lista e detalhe das entregas, documentos e perfil.

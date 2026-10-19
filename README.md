@@ -26,6 +26,7 @@ O Nativa é voltado às pessoas que organizam essa distribuição em associaçõ
 - **Notas de referência:** itens, preços e totais transcritos de duas DANFEs fornecidas, separados dos totais dos montantes para evitar dupla contagem.
 - **Perfil:** dados fixos de demonstração com opção de sair.
 - **Interface em português do Brasil:** navegação inferior em telas menores e lateral em telas maiores.
+- **Tamanho das letras:** controles no topo, disponíveis desde o login, para aumentar em etapas de 20% até 200%, diminuir ou restaurar o tamanho do aparelho. O ajuste vale também para detalhes e pop-ups, respeita a configuração de fonte do sistema e permanece durante a sessão. Recarregar a página ou reiniciar o app restaura o padrão do aparelho.
 
 Um **montante** reúne vários alimentos. Cada alimento é registrado como um **lote** com seus pedidos e quantidades rateadas. Salvar o rateio finaliza esse alimento; o montante fica finalizado quando todos os seus alimentos estão finalizados. Esse status representa o registro do rateio, sem comprovar uma entrega física.
 

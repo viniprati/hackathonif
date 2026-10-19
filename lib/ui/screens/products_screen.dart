@@ -51,7 +51,8 @@ class _ProductsScreenState extends State<ProductsScreen> {
               constraints: const BoxConstraints(maxWidth: 1100),
               child: LayoutBuilder(
                 builder: (context, constraints) {
-                  final wide = constraints.maxWidth >= 760;
+                  final scale = MediaQuery.textScalerOf(context).scale(14) / 14;
+                  final wide = constraints.maxWidth / scale >= 760;
                   return CustomScrollView(
                     slivers: [
                       SliverPadding(
@@ -76,7 +77,8 @@ class _ProductsScreenState extends State<ProductsScreen> {
                               const SizedBox(height: 20),
                               LayoutBuilder(
                                 builder: (context, metricsConstraints) {
-                                  final columns = wide ? 3 : 2;
+                                  final columns =
+                                      scale > 1.3 ? 1 : (wide ? 3 : 2);
                                   final cardWidth =
                                       (metricsConstraints.maxWidth -
                                               10 * (columns - 1)) /
@@ -161,30 +163,47 @@ class _ProductsScreenState extends State<ProductsScreen> {
                       else
                         SliverPadding(
                           padding: const EdgeInsets.fromLTRB(20, 0, 20, 28),
-                          sliver: SliverGrid.builder(
-                            itemCount: visible.length,
-                            gridDelegate:
-                                SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: wide ? 2 : 1,
-                              crossAxisSpacing: 12,
-                              mainAxisSpacing: 12,
-                              mainAxisExtent: 255,
-                            ),
-                            itemBuilder: (context, index) {
-                              final product = visible[index];
-                              return _ProductCard(
-                                product: product,
-                                onTap: () => Navigator.of(context).push(
-                                  MaterialPageRoute<void>(
-                                    builder: (_) => ProductDetailsScreen(
-                                      viewModel: widget.viewModel,
-                                      productKey: product.key,
+                          sliver: scale > 1.3
+                              ? SliverList.separated(
+                                  itemCount: visible.length,
+                                  separatorBuilder: (_, _) =>
+                                      const SizedBox(height: 12),
+                                  itemBuilder: (context, index) => _ProductCard(
+                                    product: visible[index],
+                                    onTap: () => Navigator.of(context).push(
+                                      MaterialPageRoute<void>(
+                                        builder: (_) => ProductDetailsScreen(
+                                          viewModel: widget.viewModel,
+                                          productKey: visible[index].key,
+                                        ),
+                                      ),
                                     ),
                                   ),
+                                )
+                              : SliverGrid.builder(
+                                  itemCount: visible.length,
+                                  gridDelegate:
+                                      SliverGridDelegateWithFixedCrossAxisCount(
+                                    crossAxisCount: wide ? 2 : 1,
+                                    crossAxisSpacing: 12,
+                                    mainAxisSpacing: 12,
+                                    mainAxisExtent: 280 * scale,
+                                  ),
+                                  itemBuilder: (context, index) {
+                                    final product = visible[index];
+                                    return _ProductCard(
+                                      product: product,
+                                      onTap: () => Navigator.of(context).push(
+                                        MaterialPageRoute<void>(
+                                          builder: (_) => ProductDetailsScreen(
+                                            viewModel: widget.viewModel,
+                                            productKey: product.key,
+                                          ),
+                                        ),
+                                      ),
+                                    );
+                                  },
                                 ),
-                              );
-                            },
-                          ),
                         ),
                     ],
                   );
@@ -229,16 +248,12 @@ class _MetricCard extends StatelessWidget {
                 Icon(icon, color: NativaColors.darkGreen, size: 22),
                 const SizedBox(height: 10),
                 Text(label, style: const TextStyle(fontSize: 12)),
-                FittedBox(
-                  fit: BoxFit.scaleDown,
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    value,
-                    style: const TextStyle(
-                      fontSize: 19,
-                      fontWeight: FontWeight.bold,
-                      color: NativaColors.darkGreen,
-                    ),
+                Text(
+                  value,
+                  style: const TextStyle(
+                    fontSize: 19,
+                    fontWeight: FontWeight.bold,
+                    color: NativaColors.darkGreen,
                   ),
                 ),
               ],
@@ -296,7 +311,7 @@ class _ProductCard extends StatelessWidget {
                 '${product.lotCount} ${product.lotCount == 1 ? 'lote' : 'lotes'} • ${product.schoolCount} escolas',
                 style: const TextStyle(fontSize: 12, color: NativaColors.gray),
               ),
-              const Spacer(),
+              const SizedBox(height: 12),
               Row(
                 children: [
                   Expanded(
@@ -358,13 +373,9 @@ class _Amount extends StatelessWidget {
         children: [
           Text(label,
               style: const TextStyle(fontSize: 11, color: NativaColors.gray)),
-          FittedBox(
-            fit: BoxFit.scaleDown,
-            alignment: Alignment.centerLeft,
-            child: Text(
-              formatKg(value),
-              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-            ),
+          Text(
+            formatKg(value),
+            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
           ),
         ],
       );

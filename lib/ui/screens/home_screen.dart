@@ -287,9 +287,9 @@ class _CalendarCard extends StatelessWidget {
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: ((offset + days + 6) ~/ 7) * 7,
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 7,
-                mainAxisExtent: 43,
+                mainAxisExtent: 27 + MediaQuery.textScalerOf(context).scale(16),
               ),
               itemBuilder: (context, index) {
                 final day = index - offset + 1;
