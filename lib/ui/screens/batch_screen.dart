@@ -55,7 +55,7 @@ class _BatchesScreenState extends State<BatchesScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const Text(
-                            'Montantes',
+                            'Controle de montantes',
                             style: TextStyle(
                               fontSize: 28,
                               fontWeight: FontWeight.bold,
