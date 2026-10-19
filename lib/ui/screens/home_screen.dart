@@ -1,20 +1,21 @@
 import 'package:flutter/material.dart';
 
-import '../../domain/models.dart';
+import '../../domain/batch_summary.dart';
 import '../theme.dart';
 import '../view_models/delivery_view_model.dart';
-import 'delivery_screen.dart';
+import 'batch_forms.dart';
+import 'batch_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({
     super.key,
     required this.viewModel,
-    required this.openDeliveries,
+    required this.openBatches,
     required this.openProducts,
   });
 
   final DeliveryViewModel viewModel;
-  final VoidCallback openDeliveries;
+  final VoidCallback openBatches;
   final VoidCallback openProducts;
 
   @override
@@ -28,417 +29,435 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) => ListenableBuilder(
         listenable: widget.viewModel,
         builder: (context, _) {
-          final month = widget.viewModel.selectedMonth;
-          final deliveries = widget.viewModel.deliveries
-              .where((delivery) =>
-                  delivery.date.year == month.year &&
-                  delivery.date.month == month.month &&
-                  (_selectedDate == null ||
-                      DateUtils.isSameDay(delivery.date, _selectedDate)))
-              .toList()
-            ..sort((a, b) {
-              if (a.status != b.status) {
-                return a.status == DeliveryStatus.pending ? -1 : 1;
-              }
-              return a.date.compareTo(b.date);
-            });
-
+          final batches = widget.viewModel.batches;
+          final pending = batches.where((batch) => !batch.isCompleted).toList();
+          final selected = _selectedDate == null
+              ? pending
+              : pending
+                  .where(
+                      (batch) => DateUtils.isSameDay(batch.date, _selectedDate))
+                  .toList();
+          final completed =
+              batches.where((batch) => batch.isCompleted).toList();
           return Center(
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 520),
-              child: ListView(
-                padding: const EdgeInsets.fromLTRB(16, 20, 16, 28),
-                children: [
-                  const _HomeHeader(),
-                  const SizedBox(height: 16),
-                  _CalendarCard(
-                    viewModel: widget.viewModel,
-                    selectedDate: _selectedDate,
-                    onDateSelected: (date) => setState(() {
-                      _selectedDate = DateUtils.isSameDay(_selectedDate, date)
-                          ? null
-                          : date;
-                    }),
-                    onMonthChanged: (offset) {
-                      setState(() => _selectedDate = null);
-                      widget.viewModel.changeMonth(offset);
-                    },
-                  ),
-                  const SizedBox(height: 20),
-                  Row(children: [
-                    const Expanded(
-                        child: Text('PAINEL DE ATIVIDADES',
-                            style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w800,
-                                color: NativaColors.darkGreen))),
-                    if (_selectedDate != null)
-                      TextButton(
-                          onPressed: () => setState(() => _selectedDate = null),
-                          child: const Text('Ver todo o mês')),
-                  ]),
-                  const SizedBox(height: 8),
-                  if (deliveries.isEmpty)
-                    Card(
-                        child: Padding(
-                      padding: const EdgeInsets.all(20),
-                      child: Text(_selectedDate == null
-                          ? 'Nenhuma entrega prevista neste mês.'
-                          : 'Nenhuma entrega prevista para este dia.'),
-                    )),
-                  for (final delivery in deliveries.take(3))
-                    _ActivityCard(
-                      delivery: delivery,
-                      onOpen: () =>
-                          Navigator.of(context).push(MaterialPageRoute<void>(
-                        builder: (_) => DeliveryDetails(
+              constraints: const BoxConstraints(maxWidth: 1100),
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final wide = constraints.maxWidth >= 780;
+                  final mainContent = Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      _CalendarCard(
+                        viewModel: widget.viewModel,
+                        batches: batches,
+                        selectedDate: _selectedDate,
+                        onSelect: (date) => setState(() {
+                          _selectedDate =
+                              DateUtils.isSameDay(date, _selectedDate)
+                                  ? null
+                                  : date;
+                        }),
+                        onChangeMonth: (offset) {
+                          setState(() => _selectedDate = null);
+                          widget.viewModel.changeMonth(offset);
+                        },
+                      ),
+                      const SizedBox(height: 14),
+                      FilledButton.icon(
+                        onPressed: () => showDialog<void>(
+                          context: context,
+                          builder: (_) => NewBatchDialog(
                             viewModel: widget.viewModel,
-                            deliveryId: delivery.id),
-                      )),
-                    ),
-                  if (deliveries.length > 3)
-                    TextButton.icon(
-                      onPressed: widget.openDeliveries,
-                      icon: const Icon(Icons.arrow_forward),
-                      label: Text('Ver todas as ${deliveries.length} entregas'),
-                    ),
-                  const SizedBox(height: 8),
-                  Row(children: [
-                    Expanded(
-                        child: _ShortcutCard(
-                            icon: Icons.local_shipping_outlined,
-                            label: 'ENTREGAS A FAZER',
-                            onTap: widget.openDeliveries)),
-                    const SizedBox(width: 12),
-                    Expanded(
-                        child: _ShortcutCard(
-                            icon: Icons.inventory_2_outlined,
-                            label: 'PRODUTOS',
-                            onTap: widget.openProducts)),
-                  ]),
-                  const SizedBox(height: 14),
-                  Text(
-                    '${widget.viewModel.pendingCount} entregas pendentes  •  ${formatKg(widget.viewModel.totalDistributedKg)} rateados',
-                    textAlign: TextAlign.center,
-                    style:
-                        const TextStyle(fontSize: 12, color: NativaColors.gray),
-                  ),
-                ],
+                          ),
+                        ),
+                        icon: const Icon(Icons.add),
+                        label: const Text('Cadastrar montante'),
+                      ),
+                      const SizedBox(height: 22),
+                      Row(
+                        children: [
+                          const Expanded(
+                            child: Text(
+                              'MONTANTES PENDENTES',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: NativaColors.darkGreen,
+                              ),
+                            ),
+                          ),
+                          if (_selectedDate != null)
+                            TextButton(
+                              onPressed: () =>
+                                  setState(() => _selectedDate = null),
+                              child: const Text('Ver todos'),
+                            ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      if (selected.isEmpty)
+                        const Card(
+                          child: Padding(
+                            padding: EdgeInsets.all(20),
+                            child:
+                                Text('Nenhum montante pendente nesta seleção.'),
+                          ),
+                        ),
+                      for (final batch in selected.take(3))
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 10),
+                          child: BatchCard(
+                            batch: batch,
+                            onTap: () => _openBatch(context, batch.id),
+                          ),
+                        ),
+                      TextButton.icon(
+                        onPressed: widget.openBatches,
+                        icon: const Icon(Icons.arrow_forward),
+                        label: const Text('Ver todos os montantes'),
+                      ),
+                      if (completed.isNotEmpty) ...[
+                        const SizedBox(height: 14),
+                        const Text(
+                          'HISTÓRICO RECENTE',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: NativaColors.darkGreen,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        BatchCard(
+                          batch: completed.first,
+                          onTap: () => _openBatch(context, completed.first.id),
+                        ),
+                      ],
+                    ],
+                  );
+
+                  return ListView(
+                    padding: const EdgeInsets.fromLTRB(20, 20, 20, 30),
+                    children: [
+                      Row(
+                        children: [
+                          const Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'ASSOCIAÇÃO APROVISTA',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                    color: NativaColors.earth,
+                                  ),
+                                ),
+                                SizedBox(height: 4),
+                                Text(
+                                  'Olá, Seu José!',
+                                  style: TextStyle(
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.bold,
+                                    color: NativaColors.darkGreen,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Image.asset(
+                            'assets/images/nativa_logo.png',
+                            width: 44,
+                            height: 44,
+                            semanticLabel: 'Logo Nativa',
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 18),
+                      Card(
+                        color: NativaColors.lightGreen,
+                        child: ListTile(
+                          onTap: widget.openBatches,
+                          leading: const Icon(
+                            Icons.event_note_outlined,
+                            color: NativaColors.darkGreen,
+                          ),
+                          title: Text(
+                            '${widget.viewModel.pendingCount} entregas pendentes',
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          subtitle: Text(
+                            '${widget.viewModel.pendingBatchCount} montantes aguardando divisão',
+                          ),
+                          trailing: const Icon(Icons.chevron_right),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      if (wide)
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(flex: 3, child: mainContent),
+                            const SizedBox(width: 18),
+                            SizedBox(
+                              width: 285,
+                              child: _OverviewPanel(
+                                viewModel: widget.viewModel,
+                                openProducts: widget.openProducts,
+                              ),
+                            ),
+                          ],
+                        )
+                      else ...[
+                        mainContent,
+                        const SizedBox(height: 18),
+                        _OverviewPanel(
+                          viewModel: widget.viewModel,
+                          openProducts: widget.openProducts,
+                        ),
+                      ],
+                    ],
+                  );
+                },
               ),
             ),
           );
         },
       );
-}
 
-class _HomeHeader extends StatelessWidget {
-  const _HomeHeader();
-
-  @override
-  Widget build(BuildContext context) {
-    final today = DateTime.now();
-    const weekdays = [
-      'Segunda-feira',
-      'Terça-feira',
-      'Quarta-feira',
-      'Quinta-feira',
-      'Sexta-feira',
-      'Sábado',
-      'Domingo'
-    ];
-    return Row(children: [
-      Expanded(
-          child: Text('${weekdays[today.weekday - 1]}, ${today.day}',
-              style: const TextStyle(
-                  fontSize: 21,
-                  fontWeight: FontWeight.w700,
-                  color: NativaColors.earth))),
-      Image.asset('assets/images/nativa_logo.png',
-          width: 29, height: 29, semanticLabel: 'Logo Nativa'),
-      const SizedBox(width: 5),
-      const Text('Nativa',
-          style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600)),
-    ]);
-  }
+  void _openBatch(BuildContext context, int id) => Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (_) => BatchDetailsScreen(
+            viewModel: widget.viewModel,
+            batchId: id,
+          ),
+        ),
+      );
 }
 
 class _CalendarCard extends StatelessWidget {
-  const _CalendarCard(
-      {required this.viewModel,
-      required this.selectedDate,
-      required this.onDateSelected,
-      required this.onMonthChanged});
+  const _CalendarCard({
+    required this.viewModel,
+    required this.batches,
+    required this.selectedDate,
+    required this.onSelect,
+    required this.onChangeMonth,
+  });
 
   final DeliveryViewModel viewModel;
+  final List<BatchSummary> batches;
   final DateTime? selectedDate;
-  final ValueChanged<DateTime> onDateSelected;
-  final ValueChanged<int> onMonthChanged;
+  final ValueChanged<DateTime> onSelect;
+  final ValueChanged<int> onChangeMonth;
 
   @override
   Widget build(BuildContext context) {
     final month = viewModel.selectedMonth;
     final days = DateTime(month.year, month.month + 1, 0).day;
     final offset = DateTime(month.year, month.month).weekday - 1;
-    final events = viewModel.deliveries
-        .where((delivery) =>
-            delivery.date.year == month.year &&
-            delivery.date.month == month.month)
-        .toList();
-    final today = DateTime.now();
-    final monthName = monthNames[month.month - 1];
-
+    final title = monthNames[month.month - 1];
     return Card(
       margin: EdgeInsets.zero,
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(12, 10, 12, 16),
-        child: Column(children: [
-          Row(children: [
-            IconButton(
-                tooltip: 'Mês anterior',
-                onPressed: () => onMonthChanged(-1),
-                icon: const Icon(Icons.chevron_left)),
-            Expanded(
-                child: Text(
-                    '${monthName[0].toUpperCase()}${monthName.substring(1)} ${month.year}',
+        padding: const EdgeInsets.fromLTRB(12, 8, 12, 16),
+        child: Column(
+          children: [
+            Row(
+              children: [
+                IconButton(
+                  tooltip: 'Mês anterior',
+                  onPressed: () => onChangeMonth(-1),
+                  icon: const Icon(Icons.chevron_left),
+                ),
+                Expanded(
+                  child: Text(
+                    '${title[0].toUpperCase()}${title.substring(1)} ${month.year}',
                     textAlign: TextAlign.center,
                     style: const TextStyle(
-                        fontSize: 16, fontWeight: FontWeight.w700))),
-            IconButton(
-                tooltip: 'Próximo mês',
-                onPressed: () => onMonthChanged(1),
-                icon: const Icon(Icons.chevron_right)),
-          ]),
-          const SizedBox(height: 4),
-          Row(children: [
-            for (final day in ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'])
-              Expanded(
-                  child: Text(day,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                IconButton(
+                  tooltip: 'Próximo mês',
+                  onPressed: () => onChangeMonth(1),
+                  icon: const Icon(Icons.chevron_right),
+                ),
+              ],
+            ),
+            Row(
+              children: [
+                for (final label in [
+                  'Seg',
+                  'Ter',
+                  'Qua',
+                  'Qui',
+                  'Sex',
+                  'Sáb',
+                  'Dom'
+                ])
+                  Expanded(
+                    child: Text(
+                      label,
                       textAlign: TextAlign.center,
                       style: const TextStyle(
-                          fontSize: 11, color: NativaColors.gray))),
-          ]),
-          const SizedBox(height: 5),
-          GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: ((offset + days + 6) ~/ 7) * 7,
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 7, mainAxisExtent: 47),
-            itemBuilder: (context, index) {
-              final day = index - offset + 1;
-              if (day < 1 || day > days) return const SizedBox.shrink();
-              final date = DateTime(month.year, month.month, day);
-              final dayEvents = events
-                  .where((delivery) => delivery.date.day == day)
-                  .take(3)
-                  .toList();
-              final selected = DateUtils.isSameDay(date, selectedDate);
-              final isToday = DateUtils.isSameDay(date, today);
-              return Semantics(
-                button: true,
-                selected: selected,
-                label: '$day de $monthName, ${dayEvents.length} entregas',
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(22),
-                  onTap: () => onDateSelected(date),
-                  child: Center(
-                      child: Container(
-                    width: 39,
-                    height: 42,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(12),
-                      color: selected
-                          ? NativaColors.yellow.withValues(alpha: 0.35)
-                          : Colors.transparent,
-                      border: isToday
-                          ? Border.all(color: NativaColors.earth)
-                          : null,
+                        fontSize: 11,
+                        color: NativaColors.gray,
+                      ),
                     ),
-                    child: Column(
+                  ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: ((offset + days + 6) ~/ 7) * 7,
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 7,
+                mainAxisExtent: 43,
+              ),
+              itemBuilder: (context, index) {
+                final day = index - offset + 1;
+                if (day < 1 || day > days) return const SizedBox.shrink();
+                final date = DateTime(month.year, month.month, day);
+                final events = batches.where(
+                  (batch) => DateUtils.isSameDay(batch.date, date),
+                );
+                final isSelected = DateUtils.isSameDay(date, selectedDate);
+                final isToday = DateUtils.isSameDay(date, DateTime.now());
+                return Semantics(
+                  button: true,
+                  selected: isSelected,
+                  label: '$day de $title, ${events.length} montantes',
+                  child: InkWell(
+                    onTap: () => onSelect(date),
+                    borderRadius: BorderRadius.circular(12),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? NativaColors.yellow.withValues(alpha: 0.35)
+                            : null,
+                        border: isToday
+                            ? Border.all(color: NativaColors.earth)
+                            : null,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Text('$day',
-                              style: TextStyle(
-                                  fontWeight: selected || isToday
-                                      ? FontWeight.bold
-                                      : FontWeight.normal)),
-                          if (dayEvents.isNotEmpty)
-                            Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  for (final delivery in dayEvents)
-                                    _CalendarMarker(delivery: delivery),
-                                ]),
-                        ]),
-                  )),
-                ),
-              );
-            },
-          ),
-        ]),
-      ),
-    );
-  }
-}
-
-class _CalendarMarker extends StatelessWidget {
-  const _CalendarMarker({required this.delivery});
-  final Delivery delivery;
-
-  @override
-  Widget build(BuildContext context) {
-    final completed = delivery.status == DeliveryStatus.completed;
-    final late = !completed &&
-        DateUtils.dateOnly(delivery.date)
-            .isBefore(DateUtils.dateOnly(DateTime.now()));
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 1),
-      child: Icon(
-        completed
-            ? Icons.check_circle
-            : late
-                ? Icons.error
-                : Icons.circle,
-        size: completed || late ? 10 : 8,
-        color: completed
-            ? NativaColors.green
-            : late
-                ? NativaColors.terracotta
-                : NativaColors.yellow,
-      ),
-    );
-  }
-}
-
-class _ActivityCard extends StatelessWidget {
-  const _ActivityCard({required this.delivery, required this.onOpen});
-  final Delivery delivery;
-  final VoidCallback onOpen;
-
-  @override
-  Widget build(BuildContext context) {
-    final completed = delivery.status == DeliveryStatus.completed;
-    final late = !completed &&
-        DateUtils.dateOnly(delivery.date)
-            .isBefore(DateUtils.dateOnly(DateTime.now()));
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      color: completed ? NativaColors.lightGreen : Colors.white,
-      child: InkWell(
-        onTap: onOpen,
-        borderRadius: BorderRadius.circular(18),
-        child: Padding(
-          padding: const EdgeInsets.all(14),
-          child:
-              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Expanded(
-                  child: Text(delivery.product,
-                      style: const TextStyle(
-                          fontSize: 16, fontWeight: FontWeight.w700))),
-              _ActivityBadge(
-                text: completed
-                    ? 'ENTREGUE'
-                    : late
-                        ? 'ATRASADA'
-                        : 'PENDENTE',
-                color: completed
-                    ? NativaColors.green
-                    : late
-                        ? NativaColors.terracotta
-                        : NativaColors.yellow,
-                lightText: completed || late,
-              ),
-            ]),
-            const SizedBox(height: 8),
-            _ActivityDetail(
-                icon: Icons.school_outlined,
-                text: 'Destino: ${delivery.schoolCount} escolas'),
-            const SizedBox(height: 4),
-            _ActivityDetail(
-                icon: Icons.schedule_outlined,
-                text:
-                    '${completed ? 'Concluída' : 'Prevista'} em ${formatDate(delivery.date)}'),
-            const SizedBox(height: 8),
-            Row(children: [
-              Text(formatKg(delivery.distributedKg),
-                  style: const TextStyle(
-                      fontWeight: FontWeight.w700,
-                      color: NativaColors.darkGreen)),
-              const Spacer(),
-              const Text('Ver detalhes',
-                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
-              const Icon(Icons.chevron_right, size: 18),
-            ]),
-          ]),
+                          Text(
+                            '$day',
+                            style: TextStyle(
+                              fontWeight: isSelected || isToday
+                                  ? FontWeight.bold
+                                  : FontWeight.normal,
+                            ),
+                          ),
+                          if (events.isNotEmpty)
+                            Icon(
+                              Icons.circle,
+                              size: 7,
+                              color: events.every((batch) => batch.isCompleted)
+                                  ? NativaColors.green
+                                  : NativaColors.yellow,
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ],
         ),
       ),
     );
   }
 }
 
-class _ActivityBadge extends StatelessWidget {
-  const _ActivityBadge(
-      {required this.text, required this.color, required this.lightText});
-  final String text;
-  final Color color;
-  final bool lightText;
+class _OverviewPanel extends StatelessWidget {
+  const _OverviewPanel({
+    required this.viewModel,
+    required this.openProducts,
+  });
+
+  final DeliveryViewModel viewModel;
+  final VoidCallback openProducts;
 
   @override
-  Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
-        decoration: BoxDecoration(
-            color: color, borderRadius: BorderRadius.circular(16)),
-        child: Text(text,
-            style: TextStyle(
-                color: lightText ? Colors.white : Colors.black87,
-                fontSize: 11,
-                fontWeight: FontWeight.bold)),
-      );
-}
-
-class _ActivityDetail extends StatelessWidget {
-  const _ActivityDetail({required this.icon, required this.text});
-  final IconData icon;
-  final String text;
-
-  @override
-  Widget build(BuildContext context) => Row(children: [
-        Icon(icon, size: 15, color: NativaColors.gray),
-        const SizedBox(width: 5),
-        Flexible(child: Text(text, style: const TextStyle(fontSize: 12))),
-      ]);
-}
-
-class _ShortcutCard extends StatelessWidget {
-  const _ShortcutCard(
-      {required this.icon, required this.label, required this.onTap});
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) => Card(
-        margin: EdgeInsets.zero,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(18),
-          child: SizedBox(
-            height: 112,
+  Widget build(BuildContext context) {
+    final products = viewModel.products;
+    final schools = viewModel.knownSchools;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Card(
+          color: NativaColors.lightGreen,
+          child: InkWell(
+            onTap: openProducts,
+            borderRadius: BorderRadius.circular(18),
             child: Padding(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(16),
               child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(icon, color: NativaColors.earth, size: 27),
-                    const SizedBox(height: 8),
-                    Text(label,
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                            fontSize: 12, fontWeight: FontWeight.bold)),
-                  ]),
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'ALIMENTOS',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 8),
+                  for (final product in products.take(4))
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 5),
+                      child: Text(
+                        '• ${product.name} — ${formatKg(product.receivedKg)}',
+                      ),
+                    ),
+                  const SizedBox(height: 4),
+                  Text('${products.length} alimentos cadastrados'),
+                ],
+              ),
             ),
           ),
         ),
-      );
+        const SizedBox(height: 12),
+        Card(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('ESCOLAS',
+                    style: TextStyle(fontWeight: FontWeight.bold)),
+                const SizedBox(height: 8),
+                for (final school in schools.take(4))
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 5),
+                    child: Text('• $school'),
+                  ),
+                Text('${schools.length} escolas no cadastro'),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 12),
+        const Card(
+          child: Padding(
+            padding: EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('DISTRIBUIÇÃO',
+                    style: TextStyle(fontWeight: FontWeight.bold)),
+                SizedBox(height: 8),
+                Text('1. Escolha o montante'),
+                Text('2. Selecione um alimento'),
+                Text('3. Informe os pedidos das escolas'),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
 }

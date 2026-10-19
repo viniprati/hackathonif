@@ -7,6 +7,13 @@ class SchoolRequest {
   final double requestedKg;
 }
 
+class BatchItem {
+  const BatchItem({required this.product, required this.availableKg});
+
+  final String product;
+  final double availableKg;
+}
+
 class Allocation {
   const Allocation({
     required this.school,
@@ -26,6 +33,8 @@ class Delivery {
     required this.availableKg,
     required this.date,
     required this.allocations,
+    this.batchId = 0,
+    this.batchName = '',
     this.status = DeliveryStatus.pending,
   });
 
@@ -34,6 +43,8 @@ class Delivery {
   final double availableKg;
   final DateTime date;
   final List<Allocation> allocations;
+  final int batchId;
+  final String batchName;
   final DeliveryStatus status;
 
   double get distributedKg =>
@@ -47,6 +58,20 @@ class Delivery {
         availableKg: availableKg,
         date: date,
         allocations: allocations,
+        batchId: batchId,
+        batchName: batchName,
         status: value,
+      );
+
+  Delivery withAllocations(List<Allocation> value, {DeliveryStatus? status}) =>
+      Delivery(
+        id: id,
+        product: product,
+        availableKg: availableKg,
+        date: date,
+        allocations: List.unmodifiable(value),
+        batchId: batchId,
+        batchName: batchName,
+        status: status ?? this.status,
       );
 }

@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../../domain/models.dart';
 import '../theme.dart';
 import '../view_models/delivery_view_model.dart';
-import 'delivery_screen.dart';
+import 'batch_screen.dart';
 import 'home_screen.dart';
 import 'products_screen.dart';
 
@@ -26,11 +26,11 @@ class _AppShellState extends State<AppShell> {
           final pages = [
             HomeScreen(
               viewModel: widget.viewModel,
-              openDeliveries: () => setState(() => _index = 2),
-              openProducts: () => setState(() => _index = 1),
+              openBatches: () => setState(() => _index = 1),
+              openProducts: () => setState(() => _index = 2),
             ),
+            BatchesScreen(viewModel: widget.viewModel),
             ProductsScreen(viewModel: widget.viewModel),
-            DeliveryScreen(viewModel: widget.viewModel),
             DocumentsScreen(viewModel: widget.viewModel),
             ProfileScreen(onSignOut: widget.onSignOut),
           ];
@@ -41,14 +41,14 @@ class _AppShellState extends State<AppShell> {
               label: 'Início',
             ),
             NavigationDestination(
+              icon: Icon(Icons.local_shipping_outlined),
+              selectedIcon: Icon(Icons.local_shipping),
+              label: 'Montantes',
+            ),
+            NavigationDestination(
               icon: Icon(Icons.inventory_2_outlined),
               selectedIcon: Icon(Icons.inventory_2),
               label: 'Produtos',
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.local_shipping_outlined),
-              selectedIcon: Icon(Icons.local_shipping),
-              label: 'Entregas',
             ),
             NavigationDestination(
               icon: Icon(Icons.description_outlined),
@@ -82,14 +82,14 @@ class _AppShellState extends State<AppShell> {
                           label: Text('Início'),
                         ),
                         NavigationRailDestination(
+                          icon: Icon(Icons.local_shipping_outlined),
+                          selectedIcon: Icon(Icons.local_shipping),
+                          label: Text('Montantes'),
+                        ),
+                        NavigationRailDestination(
                           icon: Icon(Icons.inventory_2_outlined),
                           selectedIcon: Icon(Icons.inventory_2),
                           label: Text('Produtos'),
-                        ),
-                        NavigationRailDestination(
-                          icon: Icon(Icons.local_shipping_outlined),
-                          selectedIcon: Icon(Icons.local_shipping),
-                          label: Text('Entregas'),
                         ),
                         NavigationRailDestination(
                           icon: Icon(Icons.description_outlined),

@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 
 import '../../data/delivery_repository.dart';
+import '../../domain/batch_summary.dart';
 import '../../domain/models.dart';
 import '../../domain/product_summary.dart';
 
@@ -12,6 +13,10 @@ class DeliveryViewModel extends ChangeNotifier {
 
   DateTime get selectedMonth => _selectedMonth;
   List<Delivery> get deliveries => _repository.getAll();
+  List<BatchSummary> get batches => summarizeBatches(deliveries);
+  List<String> get knownSchools => _repository.knownSchools;
+  int get pendingBatchCount =>
+      batches.where((batch) => !batch.isCompleted).length;
   List<ProductSummary> get products => summarizeProducts(deliveries);
   int get pendingCount => deliveries
       .where((delivery) => delivery.status == DeliveryStatus.pending)
@@ -48,6 +53,21 @@ class DeliveryViewModel extends ChangeNotifier {
       date: date,
       requests: requests,
     );
+    notifyListeners();
+  }
+
+  int addBatch({
+    required String name,
+    required DateTime date,
+    required List<BatchItem> items,
+  }) {
+    final id = _repository.addBatch(name: name, date: date, items: items);
+    notifyListeners();
+    return id;
+  }
+
+  void saveRequests(int deliveryId, List<SchoolRequest> requests) {
+    _repository.setRequests(deliveryId, requests);
     notifyListeners();
   }
 

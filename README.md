@@ -7,11 +7,13 @@ A marca usada nas telas está em `assets/images/nativa_logo.png`. O ícone quadr
 ## O que já funciona
 
 - Acesso de demonstração com qualquer CPF de 11 dígitos e senha não vazia.
-- Painel com calendário navegável, filtro por dia, atividades com status e atalhos para entregas e produtos.
+- Início com calendário, montantes pendentes, alimentos e escolas, seguindo os novos desenhos.
 - Dashboard de produtos com totais recebidos e rateados, busca, status e acesso aos lotes.
-- Cadastro de lote com produto, quantidade recebida, data e pedidos por escola, incluindo colagem de listas para dezenas de escolas.
+- Cadastro de montantes com nome, data e vários alimentos; seleção do alimento para dividir entre escolas.
+- Busca de montantes por nome, alimento ou escola e filtros por pendente ou finalizado.
+- Edição dos pedidos por escola com prévia de sobra ou falta antes de salvar o rateio.
 - Rateio proporcional aos pedidos, limitado à quantidade recebida e ao pedido de cada escola, com precisão de 0,1 kg.
-- Lista e detalhe das entregas, com status pendente ou concluído.
+- Lista e detalhe dos alimentos, com status pendente ou concluído.
 - Resumo dos lotes em Documentos e perfil de demonstração.
 
 Os dados ficam apenas na memória durante esta fase. Fechar ou reiniciar o app restaura os exemplos. Login real, cadastro permanente, comprovantes e integração com escolas ainda precisam de backend e regras operacionais validadas com a Aprovista.
