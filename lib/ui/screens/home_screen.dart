@@ -11,12 +11,10 @@ class HomeScreen extends StatefulWidget {
     super.key,
     required this.viewModel,
     required this.openBatches,
-    required this.openProducts,
   });
 
   final DeliveryViewModel viewModel;
   final VoidCallback openBatches;
-  final VoidCallback openProducts;
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -41,10 +39,9 @@ class _HomeScreenState extends State<HomeScreen> {
               batches.where((batch) => batch.isCompleted).toList();
           return Center(
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 1100),
+              constraints: const BoxConstraints(maxWidth: 760),
               child: LayoutBuilder(
                 builder: (context, constraints) {
-                  final wide = constraints.maxWidth >= 780;
                   final mainContent = Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
@@ -191,29 +188,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       ),
                       const SizedBox(height: 16),
-                      if (wide)
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Expanded(flex: 3, child: mainContent),
-                            const SizedBox(width: 18),
-                            SizedBox(
-                              width: 285,
-                              child: _OverviewPanel(
-                                viewModel: widget.viewModel,
-                                openProducts: widget.openProducts,
-                              ),
-                            ),
-                          ],
-                        )
-                      else ...[
-                        mainContent,
-                        const SizedBox(height: 18),
-                        _OverviewPanel(
-                          viewModel: widget.viewModel,
-                          openProducts: widget.openProducts,
-                        ),
-                      ],
+                      mainContent,
                     ],
                   );
                 },
@@ -371,93 +346,6 @@ class _CalendarCard extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
-}
-
-class _OverviewPanel extends StatelessWidget {
-  const _OverviewPanel({
-    required this.viewModel,
-    required this.openProducts,
-  });
-
-  final DeliveryViewModel viewModel;
-  final VoidCallback openProducts;
-
-  @override
-  Widget build(BuildContext context) {
-    final products = viewModel.products;
-    final schools = viewModel.knownSchools;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Card(
-          color: NativaColors.lightGreen,
-          child: InkWell(
-            onTap: openProducts,
-            borderRadius: BorderRadius.circular(18),
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'ALIMENTOS',
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 8),
-                  for (final product in products.take(4))
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 5),
-                      child: Text(
-                        '• ${product.name} — ${formatKg(product.receivedKg)}',
-                      ),
-                    ),
-                  const SizedBox(height: 4),
-                  Text('${products.length} alimentos cadastrados'),
-                ],
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(height: 12),
-        Card(
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text('ESCOLAS',
-                    style: TextStyle(fontWeight: FontWeight.bold)),
-                const SizedBox(height: 8),
-                for (final school in schools.take(4))
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 5),
-                    child: Text('• $school'),
-                  ),
-                Text('${schools.length} escolas no cadastro'),
-              ],
-            ),
-          ),
-        ),
-        const SizedBox(height: 12),
-        const Card(
-          child: Padding(
-            padding: EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('DISTRIBUIÇÃO',
-                    style: TextStyle(fontWeight: FontWeight.bold)),
-                SizedBox(height: 8),
-                Text('1. Escolha o montante'),
-                Text('2. Selecione um alimento'),
-                Text('3. Informe os pedidos das escolas'),
-              ],
-            ),
-          ),
-        ),
-      ],
     );
   }
 }

@@ -15,14 +15,16 @@ O Nativa é voltado às pessoas que organizam essa distribuição em associaçõ
 ## Funcionalidades implementadas
 
 - **Acesso de demonstração:** formulário com CPF de 11 dígitos, campo de senha obrigatório e opção de mostrar ou ocultar o texto. Não há autenticação real nem validação dos dígitos verificadores do CPF.
-- **Início:** calendário com navegação por mês e seleção de dia, montantes pendentes, histórico recente e resumos de alimentos e escolas.
-- **Cadastro de montantes:** nome, data e vários alimentos, cada um com sua quantidade recebida em kg.
+- **Início:** calendário com navegação por mês e seleção de dia, montantes pendentes e histórico recente. Os cards de alimentos, escolas e distribuição aparecem somente ao abrir um montante, com informações em pop-ups.
+- **Cadastro de montantes:** nome, data, alimentos selecionados do catálogo fechado, quantidade em kg, preço por kg e nota de referência opcional. O catálogo contém somente os 10 alimentos distintos das duas notas fornecidas, incluindo as variedades orgânicas.
 - **Consulta de montantes:** busca por nome, alimento ou escola e filtros de pendentes e finalizados.
-- **Divisão por alimento:** seleção de um alimento do montante e edição dos nomes e pedidos das escolas, com inclusão e remoção de linhas.
+- **Divisão por alimento:** apenas os pedidos em kg são editáveis. As escolas são predefinidas; um campo em branco representa ausência de pedido.
 - **Rateio proporcional:** cálculo em unidades de 0,1 kg, respeitando o recebido e o pedido de cada escola, com prévia de sobra ou falta.
-- **Acompanhamento do rateio:** detalhes por escola e atualização dos status ao salvar.
+- **Acompanhamento do rateio:** detalhes por escola e atualização dos status ao salvar. Se houver saldo, uma confirmação bloqueia a tela até cancelar ou confirmar; depois, é necessário informar quanto foi sobra aproveitável e quanto foi perda.
 - **Dashboard de produtos:** agrupamento de lotes por nome de produto, totais recebidos, rateados e sem rateio, busca, filtros por status e acesso aos detalhes dos lotes.
-- **Documentos e perfil:** resumo dos lotes e perfil fixo de demonstração com opção de sair.
+- **Relatórios:** filtros semanal e mensal, distribuição por escola, quantidades recebidas, pendências, sobras, perdas e taxa de perdas. Incluem valores dos alimentos com preço informado e exportação em PDF para visualizar, baixar ou imprimir.
+- **Notas de referência:** itens, preços e totais transcritos de duas DANFEs fornecidas, separados dos totais dos montantes para evitar dupla contagem.
+- **Perfil:** dados fixos de demonstração com opção de sair.
 - **Interface em português do Brasil:** navegação inferior em telas menores e lateral em telas maiores.
 
 Um **montante** reúne vários alimentos. Cada alimento é registrado como um **lote** com seus pedidos e quantidades rateadas. Salvar o rateio finaliza esse alimento; o montante fica finalizado quando todos os seus alimentos estão finalizados. Esse status representa o registro do rateio, sem comprovar uma entrega física.
@@ -35,15 +37,16 @@ As dependências diretas estão declaradas no [pubspec.yaml](pubspec.yaml).
 
 | Tecnologia ou dependência | Função no projeto |
 | --- | --- |
-| Dart | Modelos, regras de rateio e lógica do aplicativo. O projeto declara a restrição de SDK `^3.5.0`. |
+| Dart | Modelos, regras de rateio e lógica do aplicativo. O projeto declara a restrição de SDK `^3.12.0`. |
 | Flutter e Material 3 | Interface compartilhada para Web, Android e iOS, com layouts adaptados à largura disponível. |
 | `flutter_localizations` | Localização dos componentes do Flutter para `pt_BR`. |
 | `ChangeNotifier` e `ListenableBuilder` | Recursos do Flutter usados para atualizar a interface quando os dados mudam, sem pacote externo de gerenciamento de estado. |
+| `pdf` e `printing` | Geração dos relatórios em PDF, visualização, compartilhamento e impressão. A prévia Web pode carregar Pdf.js pela internet. |
 | `flutter_test` | Testes de regras de negócio, ViewModel e interações com widgets. |
 | `flutter_lints` `^5.0.0` | Regras de análise estática, complementadas pelas opções estritas do projeto. |
 | `flutter_launcher_icons` `^0.14.4` | Ferramenta de desenvolvimento para gerar os ícones de Android, iOS e Web a partir das imagens da marca. |
 
-A organização separa interface, estado, domínio e acesso aos dados. O [DeliveryViewModel](lib/ui/view_models/delivery_view_model.dart) expõe os dados para as telas, e o [DeliveryRepository](lib/data/delivery_repository.dart) mantém os registros em memória. Não há dependências de banco de dados, cliente HTTP ou serviço de autenticação.
+A organização separa interface, estado, domínio e acesso aos dados. O [DeliveryViewModel](lib/ui/view_models/delivery_view_model.dart) expõe os dados para as telas, e o [DeliveryRepository](lib/data/delivery_repository.dart) mantém os registros em memória. Não há banco de dados nem integração de negócio com um serviço de autenticação ou backend.
 
 ## Pré-requisitos e instalação
 
@@ -51,7 +54,7 @@ A organização separa interface, estado, domínio e acesso aos dados. O [Delive
 - Uma ferramenta de execução configurada para a plataforma desejada, conforme a tabela abaixo.
 - Acesso à internet para baixar as dependências na instalação inicial.
 
-O ambiente desta revisão utiliza **Flutter 3.47.7 e Dart 3.13.5**. O repositório não fixa uma versão mínima de Flutter; a restrição do Dart no `pubspec.yaml`, sozinha, não garante compatibilidade com todas as versões anteriores de Flutter.
+O ambiente desta revisão utiliza **Flutter 3.47.7 e Dart 3.13.5**. As dependências de PDF exigem Dart a partir de 3.12.0 e Flutter a partir de 3.41.0, agora declarados no `pubspec.yaml`. Para reproduzir o ambiente validado, utilize Flutter 3.47.7 com o Dart incluído nesse SDK.
 
 Após obter uma cópia do repositório, entre na pasta e instale as dependências:
 
@@ -124,6 +127,8 @@ dart run flutter_launcher_icons
 
 Essa ferramenta modifica os arquivos de ícones das plataformas e só é necessária ao atualizar a marca.
 
+Os catálogos ficam em [catalog.dart](lib/domain/catalog.dart), e os itens das notas em [invoice_reference.dart](lib/domain/invoice_reference.dart). Os PDFs usam fontes locais para preservar acentos; a licença das fontes está em [Roboto_LICENSE.txt](assets/fonts/Roboto_LICENSE.txt). Os documentos originais não são distribuídos com o aplicativo.
+
 ## Estrutura de pastas
 
 ```text
@@ -140,6 +145,7 @@ test/
   ui/screens/               Testes de acesso e fluxos em telas menores e maiores
   ui/view_models/           Testes de totais, pedidos e status
 assets/images/              Imagens da marca
+assets/fonts/               Fontes Roboto incorporadas ao PDF e licença da fonte
 android/                    Projeto nativo Android
 ios/                        Projeto nativo iOS
 web/                        Página de entrada, manifesto e ícones Web
@@ -164,14 +170,17 @@ flutter test test/domain/proportional_allocation_test.dart
 
 Os testes verificam, entre outros casos, estoque insuficiente, sobra, arredondamento, um cenário com 50 escolas, agrupamentos, atualização dos status, cadastro de montantes e o fluxo de divisão entre escolas. Os testes de widgets usam larguras de 390 e 1024 pixels; isso não equivale a testes em aparelhos físicos.
 
-Nesta revisão, a análise estática terminou sem ocorrências, os **13 testes Flutter passaram** e `flutter build web` gerou os arquivos da aplicação com sucesso. A execução em navegador e as compilações nativas não foram verificadas nesta revisão.
+Nesta revisão, a análise estática terminou sem ocorrências, os testes Flutter passaram e `flutter build web` gerou os arquivos da aplicação com sucesso. A execução em navegador e as compilações nativas não foram verificadas nesta revisão.
 
 ## Limitações atuais
 
 - Os registros existem apenas em memória, sem banco de dados, sincronização ou persistência entre reinicializações.
 - O acesso, o perfil e os dados iniciais são de demonstração. Não há contas, permissões por função ou recuperação de senha real.
 - O recorte implementado é a Aprovista; não há seleção nem isolamento de dados entre associações.
-- A tela Documentos apresenta um resumo. Não há emissão de nota fiscal, envio de fotos, comprovantes assinados ou exportação de documentos.
+- O PDF é um relatório gerencial de alimentos e valores, não uma nota fiscal. Não há emissão fiscal, importação automática de novas notas, envio de fotos ou comprovantes assinados.
+- O catálogo de alimentos foi definido a partir das notas fornecidas. As três escolas ainda são as do protótipo e precisam ser substituídas pelo cadastro oficial.
+- Os valores representam alimentos recebidos e sua destinação; não são receitas, pagamentos, lucro ou saldo bancário. Lotes sem preço são destacados e não integram o subtotal financeiro.
+- Os filtros usam a data do montante para a operação e a data de emissão para as notas. A taxa de perdas corresponde a kg perdidos divididos pelos kg recebidos no período, incluindo o estoque que ainda aguarda rateio.
 - O status finalizado indica rateio salvo. Não existe confirmação de recebimento pelas escolas nem rastreamento de entregas.
 - As quantidades são tratadas em kg e o cálculo usa unidades de 0,1 kg. Não há conversão para litros, unidades ou outras medidas.
 - O projeto nativo ainda usa identificadores de exemplo. No Android, a configuração de release usa a assinatura de depuração; o projeto requer preparação para distribuição em lojas.
@@ -182,7 +191,7 @@ Nesta revisão, a análise estática terminou sem ocorrências, os **13 testes F
 - Adicionar armazenamento permanente e autenticação com regras de acesso.
 - Validar o fluxo de pedidos, rateio e confirmação de entregas com a Aprovista.
 - Estruturar cadastros e permissões para outras associações citadas no escopo, como Aprucas, Aproder e CAFC.
-- Implementar comprovantes e exportação de dados após definir armazenamento e regras operacionais.
+- Integrar novas notas e comprovantes após definir armazenamento e regras operacionais.
 - Validar a execução em Android e iOS e preparar identificadores, assinatura e distribuição.
 
 Esses itens são propostas de evolução, não recursos disponíveis no protótipo.

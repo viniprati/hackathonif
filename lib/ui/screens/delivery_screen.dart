@@ -27,11 +27,15 @@ class DeliveryDetails extends StatelessWidget {
             (sum, item) => sum + item.requestedKg,
           );
           final difference = delivery.availableKg - requested;
-          final balance = difference > 0.05
-              ? 'Sobraram ${formatKg(difference)} do recebido.'
-              : difference < -0.05
-                  ? 'Faltaram ${formatKg(-difference)}; o recebido foi rateado proporcionalmente.'
-                  : 'Pedido e recebido estão equilibrados.';
+          final balance = delivery.status == DeliveryStatus.pending
+              ? 'Aguardando rateio e classificação.'
+              : delivery.remainderKg > 1e-7
+                  ? delivery.lossKg == null
+                      ? 'Saldo ainda não classificado: ${formatKg(delivery.remainderKg)}.'
+                      : 'Sobra aproveitável: ${formatKg(delivery.surplusKg)}. Perda: ${formatKg(delivery.lossKg!)}.'
+                  : difference < -0.05
+                      ? 'Faltaram ${formatKg(-difference)}; o recebido foi rateado proporcionalmente.'
+                      : 'Pedido e recebido estão equilibrados.';
           return Scaffold(
             appBar: AppBar(title: Text('Lote #${delivery.id}')),
             body: Center(
@@ -52,6 +56,9 @@ class DeliveryDetails extends StatelessWidget {
                     Text(
                         '${delivery.batchName} • ${formatDate(delivery.date)}'),
                     const SizedBox(height: 8),
+                    Text(delivery.unitPriceCents == null
+                        ? 'Preço não informado'
+                        : 'Preço: ${formatMoney(delivery.unitPriceCents!)} / kg'),
                     Text(
                       delivery.status == DeliveryStatus.completed
                           ? 'Finalizado'

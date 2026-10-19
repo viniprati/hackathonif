@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nativa/main.dart';
+import 'package:nativa/data/delivery_repository.dart';
+import 'package:nativa/domain/models.dart';
+import 'package:nativa/ui/screens/batch_forms.dart';
+import 'package:nativa/ui/view_models/delivery_view_model.dart';
+import 'package:nativa/ui/theme.dart';
 
 Future<void> signIn(WidgetTester tester) async {
   await tester.pumpWidget(const NativaApp());
@@ -10,103 +15,152 @@ Future<void> signIn(WidgetTester tester) async {
   await tester.pumpAndSettle();
 }
 
+void setSize(WidgetTester tester, Size size) {
+  tester.view.physicalSize = size;
+  tester.view.devicePixelRatio = 1;
+  addTearDown(() {
+    tester.view.resetPhysicalSize();
+    tester.view.resetDevicePixelRatio();
+  });
+}
+
+Future<void> selectFood(WidgetTester tester, String label, String food) async {
+  final field = find.widgetWithText(DropdownButtonFormField<String>, label);
+  await tester.ensureVisible(field);
+  await tester.tap(field);
+  await tester.pumpAndSettle();
+  await tester.ensureVisible(find.text(food).last);
+  await tester.tap(find.text(food).last);
+  await tester.pumpAndSettle();
+}
+
 void main() {
-  testWidgets('mobile flow divides a batch product among schools',
+  testWidgets(
+      'home has no overview cards; batch cards open information dialogs',
       (tester) async {
-    tester.view.physicalSize = const Size(390, 844);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(() {
-      tester.view.resetPhysicalSize();
-      tester.view.resetDevicePixelRatio();
-    });
-
+    setSize(tester, const Size(390, 844));
     await signIn(tester);
-    expect(find.text('ASSOCIAÇÃO APROVISTA'), findsOneWidget);
-    expect(find.text('3 entregas pendentes'), findsOneWidget);
-
+    expect(find.text('ALIMENTOS'), findsNothing);
+    expect(find.text('ESCOLAS'), findsNothing);
+    expect(find.text('DISTRIBUIÇÃO'), findsNothing);
     await tester.ensureVisible(find.text('Dia das Crianças'));
     await tester.tap(find.text('Dia das Crianças'));
     await tester.pumpAndSettle();
-    expect(
-        find.text('Selecione o alimento que deseja separar'), findsOneWidget);
-    await tester.tap(find.byKey(const Key('batch-product-1')));
+    expect(find.text('ALIMENTOS'), findsOneWidget);
+    expect(find.text('ESCOLAS'), findsOneWidget);
+    expect(find.text('DISTRIBUIÇÃO'), findsOneWidget);
+    await tester.tap(find.text('ALIMENTOS'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Dividir entre escolas'));
+    expect(find.byType(AlertDialog), findsOneWidget);
+    await tester.tap(find.text('Dividir Aipim'));
     await tester.pumpAndSettle();
-    expect(find.text('Pedidos das escolas'), findsOneWidget);
-
-    final quantities = find.widgetWithText(TextFormField, 'Pedido (kg)');
-    await tester.enterText(quantities.at(0), '50');
-    await tester.enterText(quantities.at(1), '30');
-    await tester.enterText(quantities.at(2), '40');
+    final values = [50, 30, 40];
+    for (var i = 0; i < values.length; i++) {
+      await tester.enterText(find.byType(TextFormField).at(i), '${values[i]}');
+    }
     await tester.pumpAndSettle();
     await tester.ensureVisible(find.text('Salvar rateio'));
     expect(find.textContaining('Faltam 20,0 kg'), findsOneWidget);
     await tester.tap(find.text('Salvar rateio'));
     await tester.pumpAndSettle();
-    expect(find.text('100,0 kg • Finalizado'), findsOneWidget);
-    Navigator.of(tester
-            .element(find.text('Selecione o alimento que deseja separar')))
-        .pop();
-    await tester.pumpAndSettle();
     expect(find.text('2 alimentos pendentes'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('wide layout opens batches and products', (tester) async {
-    tester.view.physicalSize = const Size(1024, 768);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(() {
-      tester.view.resetPhysicalSize();
-      tester.view.resetDevicePixelRatio();
-    });
-
-    await signIn(tester);
-    await tester.tap(find.text('Montantes').first);
+  testWidgets('surplus confirmation blocks the screen and records partial loss',
+      (tester) async {
+    setSize(tester, const Size(390, 844));
+    final model = DeliveryViewModel(DeliveryRepository());
+    addTearDown(model.dispose);
+    await tester.pumpWidget(MaterialApp(
+        theme: nativaTheme(),
+        home: Scaffold(
+            body: Builder(
+                builder: (context) => TextButton(
+                      onPressed: () => Navigator.of(context).push(
+                          MaterialPageRoute<void>(
+                              builder: (_) => AllocationScreen(
+                                  viewModel: model, deliveryId: 1))),
+                      child: const Text('Abrir rateio'),
+                    )))));
+    await tester.tap(find.text('Abrir rateio'));
+    await tester.pumpAndSettle();
+    expect(find.byType(TextFormField), findsNWidgets(3));
+    expect(find.text('Adicionar escola'), findsNothing);
+    expect(find.text('IFES'), findsOneWidget);
+    await tester.enterText(find.byKey(const Key('school-quantity-IFES')), '60');
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Salvar rateio'));
+    await tester.tap(find.text('Salvar rateio'));
+    await tester.pumpAndSettle();
+    expect(find.text('Confirmar saldo de alimento'), findsOneWidget);
+    await tester.tapAt(const Offset(5, 5));
+    await tester.pumpAndSettle();
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+    expect(find.text('Confirmar saldo de alimento'), findsOneWidget);
+    await tester.tap(find.text('Cancelar'));
+    await tester.pumpAndSettle();
+    expect(model.deliveries.first.status, DeliveryStatus.pending);
+    await tester.tap(find.text('Salvar rateio'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Confirmar'));
     await tester.pumpAndSettle();
     expect(
-        find.text('Selecione o montante que deseja dividir.'), findsOneWidget);
-    expect(find.text('2 montantes'), findsOneWidget);
-
-    await tester.tap(find.text('Finalizados'));
+        tester
+            .widget<TextFormField>(
+                find.byKey(const Key('school-quantity-IFES')))
+            .enabled,
+        isFalse);
+    await tester.tap(find.text('Informar sobra ou perda'));
     await tester.pumpAndSettle();
-    expect(find.text('1 montante'), findsOneWidget);
-    await tester.tap(find.text('Todos'));
+    await tester.tap(find.byType(DropdownButtonFormField<String>));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Houve perda').last);
+    await tester.pumpAndSettle();
     await tester.enterText(
-      find.widgetWithText(TextField, 'Buscar montantes'),
-      'aipim',
-    );
+        find.widgetWithText(TextFormField, 'Quantidade perdida (kg)'), '10');
+    await tester.tap(find.text('Salvar classificação'));
     await tester.pumpAndSettle();
-    expect(find.text('1 montante'), findsOneWidget);
-
-    await tester.tap(find.text('Produtos').first);
-    await tester.pumpAndSettle();
-    expect(find.text('Buscar produto'), findsOneWidget);
-    expect(find.text('5 produtos'), findsOneWidget);
+    final saved = model.deliveries.first;
+    expect(saved.lossKg, 10);
+    expect(saved.surplusKg, 30);
+    expect(saved.distributedKg, 60);
+    expect(saved.allocations.last.requestedKg, 0);
+    expect(saved.status, DeliveryStatus.completed);
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('registers a batch with multiple foods', (tester) async {
-    tester.view.physicalSize = const Size(390, 844);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(() {
-      tester.view.resetPhysicalSize();
-      tester.view.resetDevicePixelRatio();
+  for (final size in [const Size(390, 844), const Size(1024, 768)]) {
+    testWidgets('reports adapt to width ${size.width}', (tester) async {
+      setSize(tester, size);
+      await signIn(tester);
+      await tester.tap(find.text('Relatórios').first);
+      await tester.pumpAndSettle();
+      expect(find.text('Mensal'), findsOneWidget);
+      expect(find.text('Semanal'), findsOneWidget);
+      expect(find.textContaining('Taxa de perdas:'), findsOneWidget);
+      expect(find.text('Visualizar PDF'), findsOneWidget);
+      await tester.tap(find.text('Semanal'));
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
     });
+  }
 
+  testWidgets('batch creation uses only catalog selections', (tester) async {
+    setSize(tester, const Size(390, 844));
     await signIn(tester);
     await tester.tap(find.text('Cadastrar montante').first);
     await tester.pumpAndSettle();
     await tester.enterText(
         find.widgetWithText(TextFormField, 'Nome do montante'),
         'Feira de outubro');
-    await tester.enterText(
-        find.widgetWithText(TextFormField, 'Alimento 1'), 'Abóbora');
+    await selectFood(tester, 'Alimento 1', 'Aipim');
     await tester.enterText(find.widgetWithText(TextFormField, 'Kg'), '40');
+    await tester.ensureVisible(find.text('Adicionar alimento'));
     await tester.tap(find.text('Adicionar alimento'));
     await tester.pumpAndSettle();
-    await tester.enterText(
-        find.widgetWithText(TextFormField, 'Alimento 2'), 'Cenoura');
+    await selectFood(tester, 'Alimento 2', 'Banana prata');
     await tester.enterText(find.widgetWithText(TextFormField, 'Kg').last, '20');
     await tester.ensureVisible(find.text('Salvar montante'));
     await tester.tap(find.text('Salvar montante'));

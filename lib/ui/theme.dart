@@ -83,6 +83,14 @@ class NativaBrand extends StatelessWidget {
 String formatKg(double value) =>
     '${value.toStringAsFixed(1).replaceAll('.', ',')} kg';
 
+String formatMoney(int cents) {
+  final amount = (cents.abs() ~/ 100).toString().replaceAllMapped(
+        RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
+        (match) => '${match[1]}.',
+      );
+  return '${cents < 0 ? '-' : ''}R\$ $amount,${(cents.abs() % 100).toString().padLeft(2, '0')}';
+}
+
 String formatDate(DateTime date) =>
     '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
 
