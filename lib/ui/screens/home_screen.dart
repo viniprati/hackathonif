@@ -10,12 +10,12 @@ class HomeScreen extends StatefulWidget {
     super.key,
     required this.viewModel,
     required this.openDeliveries,
-    required this.openDocuments,
+    required this.openProducts,
   });
 
   final DeliveryViewModel viewModel;
   final VoidCallback openDeliveries;
-  final VoidCallback openDocuments;
+  final VoidCallback openProducts;
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -113,8 +113,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     Expanded(
                         child: _ShortcutCard(
                             icon: Icons.inventory_2_outlined,
-                            label: 'CONTROLE DE LOTES',
-                            onTap: widget.openDocuments)),
+                            label: 'PRODUTOS',
+                            onTap: widget.openProducts)),
                   ]),
                   const SizedBox(height: 14),
                   Text(

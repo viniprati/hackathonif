@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 
 import '../../data/delivery_repository.dart';
 import '../../domain/models.dart';
+import '../../domain/product_summary.dart';
 
 class DeliveryViewModel extends ChangeNotifier {
   DeliveryViewModel(this._repository);
@@ -11,6 +12,7 @@ class DeliveryViewModel extends ChangeNotifier {
 
   DateTime get selectedMonth => _selectedMonth;
   List<Delivery> get deliveries => _repository.getAll();
+  List<ProductSummary> get products => summarizeProducts(deliveries);
   int get pendingCount => deliveries
       .where((delivery) => delivery.status == DeliveryStatus.pending)
       .length;
