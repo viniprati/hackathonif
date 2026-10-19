@@ -30,4 +30,25 @@ void main() {
     expect(model.pendingCount, initialPending);
     model.dispose();
   });
+
+  test('saving school requests caps allocation and completes one food', () {
+    final model = DeliveryViewModel(DeliveryRepository());
+
+    model.saveRequests(1, const [
+      SchoolRequest(school: 'IFES', requestedKg: 50),
+      SchoolRequest(school: 'Pinto Coelho', requestedKg: 30),
+      SchoolRequest(school: 'Darllin', requestedKg: 40),
+    ]);
+
+    final aipim = model.deliveries.firstWhere((item) => item.id == 1);
+    expect(aipim.status, DeliveryStatus.completed);
+    expect(aipim.distributedKg, 100);
+    expect(aipim.allocations.map((item) => item.allocatedKg), [
+      41.7,
+      25,
+      33.3,
+    ]);
+    expect(model.pendingBatchCount, 1);
+    model.dispose();
+  });
 }
