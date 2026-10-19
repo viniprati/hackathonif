@@ -39,3 +39,14 @@ flutter test
 - `hotfix/<nome>`: correções urgentes de uma versão já publicada, criadas a partir de `main` e integradas também em `develop`.
 
 Antes de levar `develop` para `main`, execute `dart analyze` e `flutter test` e revise as telas afetadas.
+
+## Versões
+
+O aplicativo usa versionamento semântico no `pubspec.yaml`: `MAJOR.MINOR.PATCH+BUILD`. A versão atual, `0.1.0+1`, identifica o protótipo em desenvolvimento e ainda não é uma release.
+
+- `MAJOR`: mudança incompatível após a versão estável 1.0.0.
+- `MINOR`: funcionalidade nova; durante a fase `0.x`, também pode incluir mudanças incompatíveis.
+- `PATCH`: correção sem mudança intencional de comportamento público.
+- `BUILD`: número inteiro crescente a cada versão distribuída nas lojas.
+
+Registre mudanças relevantes em [CHANGELOG.md](CHANGELOG.md). Ao preparar uma release, atualize a versão e o changelog na `develop`, valide o app, integre o commit na `main` e crie nela uma tag anotada `vMAJOR.MINOR.PATCH`. A tag identifica o código publicado; commits de desenvolvimento não recebem tag de release.
