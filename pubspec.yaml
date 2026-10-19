@@ -1,7 +1,7 @@
 name: nativa
 description: Protótipo de distribuição de alimentos para escolas.
 publish_to: none
-version: 1.0.2+3
+version: 1.0.4+4
 
 environment:
   sdk: ^3.12.0
