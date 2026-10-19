@@ -203,7 +203,7 @@ class ProfileScreen extends StatelessWidget {
                     ListTile(
                       leading: Icon(Icons.info_outline),
                       title: Text('Versão'),
-                      subtitle: Text('Protótipo 0.1.0'),
+                      subtitle: Text('Versão 1.0.1'),
                     ),
                   ],
                 ),

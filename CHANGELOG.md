@@ -1,6 +1,6 @@
 # Histórico de versões
 
-## Em desenvolvimento — 0.1.0+1
+## 1.0.1+2 — 19/10/2026
 
 - Controles globais de tamanho das letras, com ampliação até 200% e respeito à fonte do aparelho; calendário e indicadores adaptados para leitura ampliada.
 - Protótipo Flutter da Nativa com login de demonstração.
@@ -14,4 +14,4 @@
 - Confirmação obrigatória do saldo e classificação de sobra e perda.
 - Relatórios semanais e mensais com valores, taxa de perdas e PDF gerencial.
 
-Ainda não há uma versão publicada ou tag de release.
+Versão preparada para integração na `main`, com tag `v1.0.1` e build Android 2.
