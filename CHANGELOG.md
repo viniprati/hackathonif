@@ -2,9 +2,11 @@
 
 ## Em desenvolvimento
 
+- Relatórios na tela e no PDF agrupados por alimento, com soma dos recebimentos, valores parciais e distribuição por escola. PDF em tabelas sem gráficos.
+
 - Indicadores de produtos clicáveis, com detalhamento de produtos, recebimentos e rateios por escola.
 - Bloqueio de pedidos cuja soma ultrapassa o recebido, no formulário e na camada de dados.
-- Relatórios com gráficos de pizza, colunas por alimento e barras por escola, com valores e lotes em seções expansíveis.
+- Relatórios com gráficos de pizza, colunas por alimento e barras por escola, com valores e alimentos em seções expansíveis.
 
 ## 1.0.1+2 — 19/10/2026
 

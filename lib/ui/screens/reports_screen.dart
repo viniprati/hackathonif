@@ -8,7 +8,6 @@ import '../../domain/invoice_reference.dart';
 import '../theme.dart';
 import '../report_charts.dart';
 import '../view_models/delivery_view_model.dart';
-import 'delivery_screen.dart';
 
 Future<Uint8List> _buildPdf(StockReport report) async {
   final fonts = await Future.wait([
@@ -43,7 +42,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
             constraints: const BoxConstraints(maxWidth: 1050),
             child: ListView.builder(
               padding: const EdgeInsets.all(20),
-              itemCount: report.lines.length + 2,
+              itemCount: report.foods.length + 2,
               itemBuilder: (context, index) {
                 if (index == 0) {
                   return Column(
@@ -164,7 +163,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
                               child: Padding(
                                   padding: const EdgeInsets.all(12),
                                   child: Text(
-                                      '${report.unpricedCount} lote(s) sem preço informado. O subtotal financeiro está incompleto.'))),
+                                      'Há recebimentos sem preço informado. Os valores financeiros são parciais.'))),
                         const SizedBox(height: 12),
                         FilledButton.icon(
                             onPressed: () => Navigator.of(context).push(
@@ -182,18 +181,18 @@ class _ReportsScreenState extends State<ReportsScreen> {
                               _downloading ? 'Gerando PDF...' : 'Baixar PDF'),
                         ),
                         const SizedBox(height: 22),
-                        const Text('Detalhamento dos lotes',
+                        const Text('Detalhamento por alimento',
                             style: TextStyle(
                                 fontSize: 20, fontWeight: FontWeight.bold)),
                         const Text(
-                            'Abra um lote para conferir quantidades, valores e o rateio.'),
-                        if (report.lines.isEmpty)
+                            'Cada alimento reúne os recebimentos e as distribuições do período.'),
+                        if (report.foods.isEmpty)
                           const Text(
                               'Nenhum montante cadastrado neste período.'),
                         const SizedBox(height: 8),
                       ]);
                 }
-                if (index == report.lines.length + 1) {
+                if (index == report.foods.length + 1) {
                   return Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
@@ -245,28 +244,55 @@ class _ReportsScreenState extends State<ReportsScreen> {
                                 fontSize: 12, color: NativaColors.gray)),
                       ]);
                 }
-                final line = report.lines[index - 1];
+                final food = report.foods[index - 1];
                 return Card(
-                    child: ExpansionTile(
-                  title: Text(line.delivery.product,
-                      style: const TextStyle(fontWeight: FontWeight.bold)),
-                  subtitle: Text(
-                      '${line.delivery.batchName} • ${formatDate(line.delivery.date)}'),
-                  childrenPadding: const EdgeInsets.all(16),
-                  children: [
-                    Text(
-                        '${line.delivery.batchName} • ${formatDate(line.delivery.date)}\nRecebido: ${formatKg(line.delivery.availableKg)}\nDistribuído: ${formatKg(line.distributedKg)} • Sobra: ${formatKg(line.surplusKg)}\nPerda: ${formatKg(line.lossKg)} • Pendente: ${formatKg(line.pendingKg)}\n${line.hasPrice ? '${formatMoney(line.delivery.unitPriceCents!)} / kg • ${formatMoney(line.receivedCents)}' : 'Preço não informado'}'),
-                    TextButton.icon(
-                      onPressed: () => Navigator.of(context).push(
-                          MaterialPageRoute<void>(
-                              builder: (_) => DeliveryDetails(
-                                  viewModel: widget.viewModel,
-                                  deliveryId: line.delivery.id))),
-                      icon: const Icon(Icons.open_in_new),
-                      label: const Text('Ver rateio do lote'),
-                    ),
-                  ],
-                ));
+                  child: ExpansionTile(
+                    key: PageStorageKey(
+                        'report-food-${food.name}-${report.window.start.toIso8601String()}-${report.period.name}'),
+                    title: Text(food.name,
+                        style: const TextStyle(fontWeight: FontWeight.bold)),
+                    subtitle: Text(
+                        'Recebido: ${formatKg(food.receivedKg)}\nDistribuído: ${formatKg(food.distributedKg)}'),
+                    childrenPadding: const EdgeInsets.all(16),
+                    expandedCrossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Text('Sobra aproveitável: ${formatKg(food.surplusKg)}'),
+                      Text('Perda: ${formatKg(food.lossKg)}'),
+                      Text(
+                          'Taxa de perdas do alimento: ${(food.lossRate * 100).toStringAsFixed(2).replaceAll('.', ',')}%'),
+                      Text('Aguardando rateio: ${formatKg(food.pendingKg)}'),
+                      Text(
+                          'Sem classificação: ${formatKg(food.unclassifiedKg)}'),
+                      const SizedBox(height: 12),
+                      Text(
+                          food.unpricedCount > 0
+                              ? 'Valores parciais: há recebimentos sem preço.'
+                              : 'Valores dos alimentos no período',
+                          style: const TextStyle(fontWeight: FontWeight.bold)),
+                      Text('Recebido: ${formatMoney(food.receivedCents)}'),
+                      Text(
+                          'Distribuído: ${formatMoney(food.distributedCents)}'),
+                      Text(
+                          'Sobra: ${formatMoney(food.surplusCents)} • Perda: ${formatMoney(food.lossCents)}'),
+                      Text(
+                          'Aguardando rateio: ${formatMoney(food.pendingCents)}'),
+                      Text(
+                          'Sem classificação: ${formatMoney(food.unclassifiedCents)}'),
+                      const SizedBox(height: 12),
+                      const Text('Distribuição deste alimento por escola',
+                          style: TextStyle(fontWeight: FontWeight.bold)),
+                      if (food.schools.isEmpty)
+                        const Text(
+                            'Sem distribuição salva deste alimento no período.'),
+                      for (final school in food.schools)
+                        ListTile(
+                            contentPadding: EdgeInsets.zero,
+                            title: Text(school.school),
+                            subtitle: Text(
+                                '${formatKg(school.kg)} • ${formatMoney(school.valueCents)}')),
+                    ],
+                  ),
+                );
               },
             ),
           ));

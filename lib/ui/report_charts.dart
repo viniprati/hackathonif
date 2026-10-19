@@ -3,7 +3,6 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../domain/stock_report.dart';
-import '../domain/product_summary.dart';
 import 'theme.dart';
 
 class ReportCharts extends StatelessWidget {
@@ -19,18 +18,10 @@ class ReportCharts extends StatelessWidget {
       ('Aguardando rateio', report.pendingKg, NativaColors.yellow),
       ('Sem classificação', report.unclassifiedKg, NativaColors.gray),
     ];
-    final foods = <String, (String, double, double)>{};
-    for (final line in report.lines) {
-      final key = normalizedProductName(line.delivery.product);
-      final previous = foods[key];
-      foods[key] = (
-        line.delivery.product,
-        (previous?.$2 ?? 0) + line.delivery.availableKg,
-        (previous?.$3 ?? 0) + line.distributedKg
-      );
-    }
-    final products = foods.values.toList()
-      ..sort((a, b) => a.$1.compareTo(b.$1));
+    final products = [
+      for (final food in report.foods)
+        (food.name, food.receivedKg, food.distributedKg)
+    ];
     final maximum =
         products.fold<double>(0, (value, item) => math.max(value, item.$2));
     final schools = report.schools;

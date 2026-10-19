@@ -1,5 +1,6 @@
 import 'invoice_reference.dart';
 import 'models.dart';
+import 'product_summary.dart';
 
 enum ReportPeriod { week, month }
 
@@ -79,7 +80,7 @@ class SchoolDistribution {
   final int valueCents;
 }
 
-class StockReport {
+class StockReport with StockReportTotals {
   StockReport({
     required this.period,
     required DateTime reference,
@@ -89,14 +90,38 @@ class StockReport {
     lines = List.unmodifiable(deliveries
         .where((delivery) => window.contains(delivery.date))
         .map(StockReportLine.new));
+    final groups = <String, List<StockReportLine>>{};
+    for (final line in lines) {
+      groups
+          .putIfAbsent(normalizedProductName(line.delivery.product), () => [])
+          .add(line);
+    }
+    foods = List.unmodifiable(groups.values
+        .map((items) => FoodStockReport(
+              name: items.first.delivery.product
+                  .trim()
+                  .replaceAll(RegExp(r'\s+'), ' '),
+              lines: items,
+            ))
+        .toList()
+      ..sort((a, b) => normalizedProductName(a.name)
+          .compareTo(normalizedProductName(b.name))));
     invoiceReferences = List.unmodifiable(
         invoices.where((invoice) => window.contains(invoice.issuedAt)));
   }
 
   final ReportPeriod period;
   final ReportingWindow window;
+  @override
   late final List<StockReportLine> lines;
+  late final List<FoodStockReport> foods;
   late final List<InvoiceReference> invoiceReferences;
+  int get invoicesCents => invoiceReferences.fold<int>(
+      0, (sum, invoice) => sum + invoice.totalCents);
+}
+
+mixin StockReportTotals {
+  List<StockReportLine> get lines;
   double get receivedKg =>
       lines.fold<double>(0, (sum, line) => sum + line.delivery.availableKg);
   double get distributedKg =>
@@ -121,8 +146,6 @@ class StockReport {
   int get unclassifiedCents =>
       lines.fold<int>(0, (sum, line) => sum + line.unclassifiedCents);
   int get unpricedCount => lines.where((line) => !line.hasPrice).length;
-  int get invoicesCents => invoiceReferences.fold<int>(
-      0, (sum, invoice) => sum + invoice.totalCents);
 
   List<SchoolDistribution> get schools {
     final kg = <String, double>{};
@@ -147,4 +170,14 @@ class StockReport {
         SchoolDistribution(name, kg[name]!, values[name]!)
     ];
   }
+}
+
+class FoodStockReport with StockReportTotals {
+  FoodStockReport(
+      {required this.name, required Iterable<StockReportLine> lines})
+      : lines = List.unmodifiable(lines);
+
+  final String name;
+  @override
+  final List<StockReportLine> lines;
 }

@@ -111,66 +111,79 @@ class ReportPdf {
             style: const pw.TextStyle(fontSize: 10)),
         if (report.unpricedCount > 0)
           pw.Text(
-              'ATENÇÃO: ${report.unpricedCount} lote(s) sem preço. O subtotal financeiro não inclui esses lotes.',
+              'ATENÇÃO: há recebimentos sem preço. Seus valores não estão incluídos nos subtotais financeiros.',
               style:
                   pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold)),
-        heading('Alimentos recebidos e preços por lote'),
-        if (report.lines.isEmpty)
-          pw.Text('Nenhum montante cadastrado no período.'),
-        if (report.lines.isNotEmpty)
+        heading('Quantidades por alimento'),
+        pw.Text(
+            'Recebimentos do mesmo alimento são somados dentro do período selecionado.',
+            style: const pw.TextStyle(fontSize: 9)),
+        if (report.foods.isEmpty)
+          pw.Text('Nenhum alimento recebido no período.'),
+        if (report.foods.isNotEmpty)
           table([
-            'Alimento / montante',
-            'Data',
-            'Kg',
-            'R\$/kg',
-            'Valor',
-            'NF ref.'
-          ], [
-            for (final line in report.lines)
-              [
-                '${line.delivery.product}\n${line.delivery.batchName}',
-                _date(line.delivery.date),
-                line.delivery.availableKg
-                    .toStringAsFixed(1)
-                    .replaceAll('.', ','),
-                line.hasPrice
-                    ? _money(line.delivery.unitPriceCents!)
-                    : 'Sem preço',
-                line.hasPrice ? _money(line.receivedCents) : 'Não incluído',
-                line.delivery.invoiceNumber ?? 'Não vinculada',
-              ],
-          ]),
-        heading('Distribuição, sobras e perdas por lote'),
-        if (report.lines.isNotEmpty)
-          table([
-            'Alimento / lote',
+            'Alimento',
+            'Recebido',
             'Distribuído',
             'Sobra',
             'Perda',
-            'Pendente',
+            'Aguardando rateio',
             'Sem classif.'
           ], [
-            for (final line in report.lines)
+            for (final food in report.foods)
               [
-                '${line.delivery.product} #${line.delivery.id}',
-                _kg(line.distributedKg),
-                _kg(line.surplusKg),
-                _kg(line.lossKg),
-                _kg(line.pendingKg),
-                _kg(line.unclassifiedKg),
+                food.name,
+                _kg(food.receivedKg),
+                _kg(food.distributedKg),
+                _kg(food.surplusKg),
+                _kg(food.lossKg),
+                _kg(food.pendingKg),
+                _kg(food.unclassifiedKg)
               ],
           ]),
-        heading('Distribuição por escola'),
+        heading('Valores por alimento'),
+        pw.Text(
+            'Valores somados conforme o preço de cada recebimento. A indicação "parcial" significa que há recebimentos sem preço informado.',
+            style: const pw.TextStyle(fontSize: 9)),
+        if (report.foods.isNotEmpty)
+          table([
+            'Alimento',
+            'Recebido',
+            'Distribuído',
+            'Sobra',
+            'Perda',
+            'Aguardando rateio',
+            'Sem classif.'
+          ], [
+            for (final food in report.foods)
+              [
+                '${food.name}${food.unpricedCount > 0 ? ' (parcial)' : ''}',
+                _money(food.receivedCents),
+                _money(food.distributedCents),
+                _money(food.surplusCents),
+                _money(food.lossCents),
+                _money(food.pendingCents),
+                _money(food.unclassifiedCents)
+              ],
+          ]),
+        heading('Distribuição de alimentos por escola'),
         if (report.schools.isEmpty)
           pw.Text('Nenhum rateio salvo para escolas neste período.'),
         if (report.schools.isNotEmpty)
           table([
+            'Alimento',
             'Escola',
             'Quantidade',
             'Valor com preço informado'
           ], [
-            for (final school in report.schools)
-              [school.school, _kg(school.kg), _money(school.valueCents)],
+            for (final food in report.foods)
+              for (final school in food.schools)
+                [
+                  food.name,
+                  school.school,
+                  _kg(school.kg),
+                  _money(school.valueCents)
+                ],
           ]),
         heading('Notas fiscais de referência no período'),
         pw.Text(
