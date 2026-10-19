@@ -18,7 +18,13 @@ void main() {
     await tester.tap(find.text('Entrar'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Olá, Seu José!'), findsOneWidget);
+    expect(find.text('PAINEL DE ATIVIDADES'), findsOneWidget);
+    await tester.tap(find.text('Cesta de verduras').first);
+    await tester.pumpAndSettle();
+    expect(find.text('Rateio por escola'), findsOneWidget);
+    Navigator.of(tester.element(find.text('Rateio por escola'))).pop();
+    await tester.pumpAndSettle();
+
     await tester.tap(find.text('Entregas'));
     await tester.pumpAndSettle();
     expect(find.text('Nova distribuição'), findsOneWidget);

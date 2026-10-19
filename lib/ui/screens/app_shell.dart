@@ -26,6 +26,7 @@ class _AppShellState extends State<AppShell> {
             HomeScreen(
               viewModel: widget.viewModel,
               openDeliveries: () => setState(() => _index = 1),
+              openDocuments: () => setState(() => _index = 2),
             ),
             DeliveryScreen(viewModel: widget.viewModel),
             DocumentsScreen(viewModel: widget.viewModel),
