@@ -1,0 +1,38 @@
+name: nativa
+description: Protótipo de distribuição de alimentos para escolas.
+publish_to: none
+version: 0.1.0+1
+
+environment:
+  sdk: ^3.5.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+  flutter_launcher_icons: ^0.14.4
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: assets/images/nativa_launcher.png
+  adaptive_icon_background: '#F7F3E8'
+  adaptive_icon_foreground: assets/images/nativa_logo.png
+  remove_alpha_ios: true
+  background_color_ios: '#F7F3E8'
+  web:
+    generate: true
+    image_path: assets/images/nativa_launcher.png
+    background_color: '#F7F3E8'
+    theme_color: '#2F593D'
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/images/nativa_logo.png
