@@ -1,5 +1,12 @@
 # Histórico de versões
 
+## 1.0.4+4 — 19/10/2026
+
+- Indicadores de produtos com abertura dos detalhes pelo card inteiro, sem hyperlink.
+
+- Seleção das escolas participantes no cadastro do montante, com lista filtrada nos detalhes e no rateio de todos os alimentos.
+- Validação impede pedidos de escolas não participantes e preserva a seleção ao salvar e reabrir a distribuição.
+
 ## 1.0.2+3 — 19/10/2026
 
 - Relatórios na tela e no PDF agrupados por alimento, com soma dos recebimentos, valores parciais e distribuição por escola. PDF em tabelas sem gráficos.

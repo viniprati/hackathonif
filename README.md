@@ -2,7 +2,7 @@
 
 Protótipo Flutter para organizar montantes de alimentos e calcular sua distribuição entre escolas, com foco inicial na associação **Aprovista**.
 
-Versão: **1.0.2+3**, conforme o [pubspec.yaml](pubspec.yaml). O histórico de mudanças está no [CHANGELOG.md](CHANGELOG.md).
+Versão: **1.0.4+4**, conforme o [pubspec.yaml](pubspec.yaml). O histórico de mudanças está no [CHANGELOG.md](CHANGELOG.md).
 
 ## Problema, público-alvo e solução
 
@@ -16,9 +16,9 @@ O Nativa é voltado às pessoas que organizam essa distribuição em associaçõ
 
 - **Acesso de demonstração:** formulário com CPF de 11 dígitos, campo de senha obrigatório e opção de mostrar ou ocultar o texto. Não há autenticação real nem validação dos dígitos verificadores do CPF.
 - **Início:** calendário com navegação por mês e seleção de dia, montantes pendentes e histórico recente. Os cards de alimentos, escolas e distribuição aparecem somente ao abrir um montante, com informações em pop-ups.
-- **Cadastro de montantes:** nome, data, alimentos selecionados do catálogo fechado, quantidade em kg, preço por kg e nota de referência opcional. O catálogo contém somente os 10 alimentos distintos das duas notas fornecidas, incluindo as variedades orgânicas.
+- **Cadastro de montantes:** nome, data, seleção obrigatória de pelo menos uma escola participante do cadastro definido, alimentos selecionados do catálogo fechado, quantidade em kg, preço por kg e nota de referência opcional. O catálogo contém somente os 10 alimentos distintos das duas notas fornecidas, incluindo as variedades orgânicas.
 - **Consulta de montantes:** busca por nome, alimento ou escola e filtros de pendentes e finalizados.
-- **Divisão por alimento:** apenas os pedidos em kg são editáveis. As escolas são predefinidas; um campo em branco representa ausência de pedido.
+- **Divisão por alimento:** apenas os pedidos em kg são editáveis. Aparecem apenas as escolas selecionadas no montante, sem edição dos nomes; um campo em branco representa ausência de pedido daquele alimento. A escolha vale para todos os alimentos do montante e é preservada ao salvar o rateio.
 - **Validação dos pedidos:** quantidades em unidades de 0,1 kg e bloqueio quando a soma dos pedidos ultrapassa o recebido, com aviso do excesso. A regra é aplicada no formulário e na camada de dados.
 - **Acompanhamento do rateio:** detalhes por escola e atualização dos status ao salvar. Se houver saldo, uma confirmação bloqueia a tela até cancelar ou confirmar; depois, é necessário informar quanto foi sobra aproveitável e quanto foi perda.
 - **Dashboard de produtos:** agrupamento de lotes por nome de produto, totais recebidos, rateados e sem rateio, busca, filtros por status e acesso aos detalhes dos lotes. Os três indicadores abrem o catálogo, os recebimentos por produto e os rateios por escola.
@@ -203,4 +203,4 @@ O fluxo definido para o projeto usa `develop` como integração e base para `fea
 
 A versão segue `MAJOR.MINOR.PATCH+BUILD` no [pubspec.yaml](pubspec.yaml): `MINOR` para novas funcionalidades, `PATCH` para correções e `MAJOR` para mudanças incompatíveis após a versão estável 1.0.0. Durante a fase `0.x`, novas versões menores também podem conter mudanças incompatíveis. O número `BUILD` cresce a cada versão distribuída nas lojas.
 
-Atualize o [CHANGELOG.md](CHANGELOG.md) ao preparar uma versão. Antes de integrar uma release na `main`, valide o aplicativo e execute os testes e a análise estática. As releases usam tags anotadas no formato `vMAJOR.MINOR.PATCH`. A versão atual corresponde à tag `v1.0.2`; o sufixo `+3` identifica o build Android 3.
+Atualize o [CHANGELOG.md](CHANGELOG.md) ao preparar uma versão. Antes de integrar uma release na `main`, valide o aplicativo e execute os testes e a análise estática. As releases usam tags anotadas no formato `vMAJOR.MINOR.PATCH`. A versão atual está registrada no changelog; o sufixo `+4` identifica o build Android 4.

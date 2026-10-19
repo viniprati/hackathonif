@@ -18,6 +18,10 @@ class BatchDetailsScreen extends StatelessWidget {
         builder: (context, _) {
           final batch =
               viewModel.batches.firstWhere((batch) => batch.id == batchId);
+          final participatingSchools = batch.deliveries
+              .expand(viewModel.schoolsForDelivery)
+              .toSet()
+              .toList();
           return Scaffold(
             appBar: AppBar(title: const Text('Montante')),
             body: Center(
@@ -99,12 +103,12 @@ class BatchDetailsScreen extends StatelessWidget {
                       title: 'ESCOLAS',
                       icon: Icons.school_outlined,
                       subtitle:
-                          '${viewModel.knownSchools.length} escolas no cadastro definido',
+                          '${participatingSchools.length} ${participatingSchools.length == 1 ? 'escola participante' : 'escolas participantes'}',
                       onTap: () => showDialog<void>(
                         context: context,
                         builder: (_) =>
                             _InfoDialog(title: 'Escolas e pedidos', children: [
-                          for (final school in viewModel.knownSchools)
+                          for (final school in participatingSchools)
                             ListTile(
                               title: Text(school),
                               subtitle: Text([
