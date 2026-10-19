@@ -1,6 +1,6 @@
 # Histórico de versões
 
-## Em desenvolvimento
+## 1.0.2+3 — 19/10/2026
 
 - Relatórios na tela e no PDF agrupados por alimento, com soma dos recebimentos, valores parciais e distribuição por escola. PDF em tabelas sem gráficos.
 
