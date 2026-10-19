@@ -1,64 +1,196 @@
 # Nativa
 
-Protótipo Flutter para a **Aprovista** organizar lotes de alimentos destinados a escolas. O escopo inicial veio de `anotacoes.txt`; as telas e as cores seguem as referências enviadas.
+Protótipo Flutter para organizar montantes de alimentos e calcular sua distribuição entre escolas, com foco inicial na associação **Aprovista**.
 
-A marca usada nas telas está em `assets/images/nativa_logo.png`. O ícone quadrado em `assets/images/nativa_launcher.png` gera os ícones de Android, iOS e Web com `dart run flutter_launcher_icons`.
+Versão em desenvolvimento: **0.1.0+1**, conforme o [pubspec.yaml](pubspec.yaml). O histórico de mudanças está no [CHANGELOG.md](CHANGELOG.md).
 
-## O que já funciona
+## Problema, público-alvo e solução
 
-- Acesso de demonstração com qualquer CPF de 11 dígitos e senha não vazia.
-- Início com calendário, montantes pendentes, alimentos e escolas, seguindo os novos desenhos.
-- Dashboard de produtos com totais recebidos e rateados, busca, status e acesso aos lotes.
-- Cadastro de montantes com nome, data e vários alimentos; seleção do alimento para dividir entre escolas.
-- Busca de montantes por nome, alimento ou escola e filtros por pendente ou finalizado.
-- Edição dos pedidos por escola com prévia de sobra ou falta antes de salvar o rateio.
-- Rateio proporcional aos pedidos, limitado à quantidade recebida e ao pedido de cada escola, com precisão de 0,1 kg.
-- Lista e detalhe dos alimentos, com status pendente ou concluído.
-- Resumo dos lotes em Documentos e perfil de demonstração.
+O [escopo inicial](anotacoes.txt) descreve alimentos recebidos em montantes e a necessidade de dividi-los entre escolas a partir dos pedidos feitos pela nutricionista. Quando a quantidade recebida é menor que a soma dos pedidos, a pessoa responsável pela distribuição precisa definir quanto cada escola receberá e acompanhar as pendências.
 
-Os dados ficam apenas na memória durante esta fase. Fechar ou reiniciar o app restaura os exemplos. Login real, cadastro permanente, comprovantes e integração com escolas ainda precisam de backend e regras operacionais validadas com a Aprovista.
+O Nativa é voltado às pessoas que organizam essa distribuição em associações. A proposta é reunir os alimentos de cada montante, registrar os pedidos das escolas e calcular um rateio proporcional, mantendo visíveis os totais, as sobras, as faltas e os status.
 
-O recorte atual é a Aprovista. Aprucas, Aproder e CAFC podem usar o mesmo fluxo depois que cadastros, permissões e regras próprias forem definidos.
+**O aplicativo atual é uma demonstração local.** Os exemplos de montantes, alimentos, escolas e perfil são carregados pelo código e ficam em memória. Os cálculos e formulários funcionam localmente, mas não há conexão com serviços de associações ou escolas. Reiniciar o app ou recarregar a página restaura os dados de exemplo.
+
+## Funcionalidades implementadas
+
+- **Acesso de demonstração:** formulário com CPF de 11 dígitos, campo de senha obrigatório e opção de mostrar ou ocultar o texto. Não há autenticação real nem validação dos dígitos verificadores do CPF.
+- **Início:** calendário com navegação por mês e seleção de dia, montantes pendentes, histórico recente e resumos de alimentos e escolas.
+- **Cadastro de montantes:** nome, data e vários alimentos, cada um com sua quantidade recebida em kg.
+- **Consulta de montantes:** busca por nome, alimento ou escola e filtros de pendentes e finalizados.
+- **Divisão por alimento:** seleção de um alimento do montante e edição dos nomes e pedidos das escolas, com inclusão e remoção de linhas.
+- **Rateio proporcional:** cálculo em unidades de 0,1 kg, respeitando o recebido e o pedido de cada escola, com prévia de sobra ou falta.
+- **Acompanhamento do rateio:** detalhes por escola e atualização dos status ao salvar.
+- **Dashboard de produtos:** agrupamento de lotes por nome de produto, totais recebidos, rateados e sem rateio, busca, filtros por status e acesso aos detalhes dos lotes.
+- **Documentos e perfil:** resumo dos lotes e perfil fixo de demonstração com opção de sair.
+- **Interface em português do Brasil:** navegação inferior em telas menores e lateral em telas maiores.
+
+Um **montante** reúne vários alimentos. Cada alimento é registrado como um **lote** com seus pedidos e quantidades rateadas. Salvar o rateio finaliza esse alimento; o montante fica finalizado quando todos os seus alimentos estão finalizados. Esse status representa o registro do rateio, sem comprovar uma entrega física.
+
+Quando há menos alimento que o solicitado, o cálculo divide o recebido proporcionalmente aos pedidos. Quando há mais, cada escola recebe até o que pediu e a sobra permanece indicada. A implementação está em [proportional_allocation.dart](lib/domain/proportional_allocation.dart).
+
+## Tecnologias e dependências
+
+As dependências diretas estão declaradas no [pubspec.yaml](pubspec.yaml).
+
+| Tecnologia ou dependência | Função no projeto |
+| --- | --- |
+| Dart | Modelos, regras de rateio e lógica do aplicativo. O projeto declara a restrição de SDK `^3.5.0`. |
+| Flutter e Material 3 | Interface compartilhada para Web, Android e iOS, com layouts adaptados à largura disponível. |
+| `flutter_localizations` | Localização dos componentes do Flutter para `pt_BR`. |
+| `ChangeNotifier` e `ListenableBuilder` | Recursos do Flutter usados para atualizar a interface quando os dados mudam, sem pacote externo de gerenciamento de estado. |
+| `flutter_test` | Testes de regras de negócio, ViewModel e interações com widgets. |
+| `flutter_lints` `^5.0.0` | Regras de análise estática, complementadas pelas opções estritas do projeto. |
+| `flutter_launcher_icons` `^0.14.4` | Ferramenta de desenvolvimento para gerar os ícones de Android, iOS e Web a partir das imagens da marca. |
+
+A organização separa interface, estado, domínio e acesso aos dados. O [DeliveryViewModel](lib/ui/view_models/delivery_view_model.dart) expõe os dados para as telas, e o [DeliveryRepository](lib/data/delivery_repository.dart) mantém os registros em memória. Não há dependências de banco de dados, cliente HTTP ou serviço de autenticação.
+
+## Pré-requisitos e instalação
+
+- Flutter no canal estável, com o Dart incluído no SDK, e os comandos `flutter` e `dart` disponíveis no terminal.
+- Uma ferramenta de execução configurada para a plataforma desejada, conforme a tabela abaixo.
+- Acesso à internet para baixar as dependências na instalação inicial.
+
+O ambiente desta revisão utiliza **Flutter 3.47.7 e Dart 3.13.5**. O repositório não fixa uma versão mínima de Flutter; a restrição do Dart no `pubspec.yaml`, sozinha, não garante compatibilidade com todas as versões anteriores de Flutter.
+
+Após obter uma cópia do repositório, entre na pasta e instale as dependências:
+
+```sh
+cd hackathonif
+flutter doctor
+flutter pub get
+flutter devices
+```
+
+| Plataforma configurada | Requisitos específicos |
+| --- | --- |
+| Web | Navegador; Chrome para o destino `chrome`, ou um navegador acessando o servidor de desenvolvimento. |
+| Android | Android SDK, JDK compatível com a configuração Gradle e um emulador ou aparelho conectado. Os alvos Java e Kotlin estão configurados como 17. |
+| iOS | macOS com Xcode e as ferramentas iOS configuradas para Flutter, além de simulador ou aparelho. O projeto define iOS 15.0 como alvo mínimo. |
+
+Existem projetos de plataforma em [web/](web/), [android/](android/) e [ios/](ios/). Não há projetos nativos para Linux, Windows ou macOS neste repositório.
 
 ## Executar
 
+### Web
+
+Com Chrome instalado e reconhecido pelo Flutter:
+
 ```sh
-flutter pub get
-flutter run
+flutter run -d chrome
 ```
 
-## Verificar
+Como alternativa, inicie o servidor de desenvolvimento e abra o endereço informado pelo terminal no navegador:
+
+```sh
+flutter run -d web-server --web-hostname 127.0.0.1 --web-port 8080
+```
+
+Para gerar os arquivos estáticos da versão Web:
+
+```sh
+flutter build web
+```
+
+A saída fica em `build/web/`. Esse comando gera os arquivos; ele não publica o aplicativo em um serviço de hospedagem.
+
+### Android e iOS
+
+Inicie um emulador, simulador ou conecte um aparelho. Execute `flutter devices` e substitua o identificador no comando correspondente pelo ID listado:
+
+```sh
+# Android
+flutter run -d ID_ANDROID
+
+# iOS, em macOS
+flutter run -d ID_IOS
+```
+
+As configurações nativas estão presentes, mas a execução em Android e iOS não foi validada nesta revisão. Esses comandos dependem da configuração local das ferramentas e dos dispositivos.
+
+### Acesso para demonstração
+
+Use dados fictícios: a tela exige 11 dígitos no campo CPF e preenchimento do campo de senha. Não há conta cadastrada, credencial fixa ou consulta a um servidor. O botão de recuperação de senha apenas informa que o serviço ainda precisa ser integrado.
+
+## Configurações
+
+O app não exige `.env`, variáveis de ambiente próprias, chaves de API ou configuração de backend. Os exemplos são definidos em [delivery_repository.dart](lib/data/delivery_repository.dart), e o tema e os formatos de exibição estão em [theme.dart](lib/ui/theme.dart).
+
+A logo utilizada nas telas está em [assets/images/nativa_logo.png](assets/images/nativa_logo.png). O arquivo [assets/images/nativa_launcher.png](assets/images/nativa_launcher.png) é a base dos ícones, conforme a configuração `flutter_launcher_icons` no `pubspec.yaml`. Para regenerá-los, após instalar as dependências:
+
+```sh
+dart run flutter_launcher_icons
+```
+
+Essa ferramenta modifica os arquivos de ícones das plataformas e só é necessária ao atualizar a marca.
+
+## Estrutura de pastas
+
+```text
+lib/
+  main.dart                 Inicialização, tema, localização e acesso de demonstração
+  data/                     Repositório com dados de exemplo e armazenamento em memória
+  domain/                   Modelos, agrupamentos e cálculo proporcional
+  ui/
+    screens/                Início, montantes, formulários, produtos e detalhes
+    view_models/            Estado e operações usados pelas telas
+    theme.dart              Cores, marca e formatação de datas e pesos
+test/
+  domain/                   Testes de rateio e agrupamento
+  ui/screens/               Testes de acesso e fluxos em telas menores e maiores
+  ui/view_models/           Testes de totais, pedidos e status
+assets/images/              Imagens da marca
+android/                    Projeto nativo Android
+ios/                        Projeto nativo iOS
+web/                        Página de entrada, manifesto e ícones Web
+```
+
+O [anotacoes.txt](anotacoes.txt) registra o escopo inicial, e o [analysis_options.yaml](analysis_options.yaml) define as regras de análise de código.
+
+## Testes e análise de código
+
+Após `flutter pub get`, execute na raiz do projeto:
 
 ```sh
 dart analyze
 flutter test
 ```
 
-## Fluxo de branches
+Para executar apenas os testes da regra de rateio:
 
-- `main`: versão pronta para publicação. Recebe mudanças de `develop` somente depois de validação.
-- `develop`: integração contínua do aplicativo e base para o trabalho diário.
-- `feature/<nome>`: novas funcionalidades criadas a partir de `develop`; retornam para `develop` por pull request.
-- `hotfix/<nome>`: correções urgentes de uma versão já publicada, criadas a partir de `main` e integradas também em `develop`.
+```sh
+flutter test test/domain/proportional_allocation_test.dart
+```
 
-Antes de levar `develop` para `main`, execute `dart analyze` e `flutter test` e revise as telas afetadas.
+Os testes verificam, entre outros casos, estoque insuficiente, sobra, arredondamento, um cenário com 50 escolas, agrupamentos, atualização dos status, cadastro de montantes e o fluxo de divisão entre escolas. Os testes de widgets usam larguras de 390 e 1024 pixels; isso não equivale a testes em aparelhos físicos.
 
-## Colaboradores
+Nesta revisão, a análise estática terminou sem ocorrências, os **13 testes Flutter passaram** e `flutter build web` gerou os arquivos da aplicação com sucesso. A execução em navegador e as compilações nativas não foram verificadas nesta revisão.
 
-- [@viniprati](https://github.com/viniprati)
-- [@ceciliadumer](https://github.com/ceciliadumer)
-- [@catharinescheffler](https://github.com/catharinescheffler)
-- [@anabeatrizmanga](https://github.com/anabeatrizmanga)
+## Limitações atuais
 
-Em commits feitos em conjunto, registre cada colaborador adicional com um trailer `Co-authored-by` usando o endereço associado à conta no GitHub.
+- Os registros existem apenas em memória, sem banco de dados, sincronização ou persistência entre reinicializações.
+- O acesso, o perfil e os dados iniciais são de demonstração. Não há contas, permissões por função ou recuperação de senha real.
+- O recorte implementado é a Aprovista; não há seleção nem isolamento de dados entre associações.
+- A tela Documentos apresenta um resumo. Não há emissão de nota fiscal, envio de fotos, comprovantes assinados ou exportação de documentos.
+- O status finalizado indica rateio salvo. Não existe confirmação de recebimento pelas escolas nem rastreamento de entregas.
+- As quantidades são tratadas em kg e o cálculo usa unidades de 0,1 kg. Não há conversão para litros, unidades ou outras medidas.
+- O projeto nativo ainda usa identificadores de exemplo. No Android, a configuração de release usa a assinatura de depuração; o projeto requer preparação para distribuição em lojas.
+- Não há registro no repositório que comprove validação operacional com a associação ou resultados de uso em produção.
 
-## Versões
+## Próximos passos propostos
 
-O aplicativo usa versionamento semântico no `pubspec.yaml`: `MAJOR.MINOR.PATCH+BUILD`. A versão atual, `0.1.0+1`, identifica o protótipo em desenvolvimento e ainda não é uma release.
+- Adicionar armazenamento permanente e autenticação com regras de acesso.
+- Validar o fluxo de pedidos, rateio e confirmação de entregas com a Aprovista.
+- Estruturar cadastros e permissões para outras associações citadas no escopo, como Aprucas, Aproder e CAFC.
+- Implementar comprovantes e exportação de dados após definir armazenamento e regras operacionais.
+- Validar a execução em Android e iOS e preparar identificadores, assinatura e distribuição.
 
-- `MAJOR`: mudança incompatível após a versão estável 1.0.0.
-- `MINOR`: funcionalidade nova; durante a fase `0.x`, também pode incluir mudanças incompatíveis.
-- `PATCH`: correção sem mudança intencional de comportamento público.
-- `BUILD`: número inteiro crescente a cada versão distribuída nas lojas.
+Esses itens são propostas de evolução, não recursos disponíveis no protótipo.
 
-Registre mudanças relevantes em [CHANGELOG.md](CHANGELOG.md). Ao preparar uma release, atualize a versão e o changelog na `develop`, valide o app, integre o commit na `main` e crie nela uma tag anotada `vMAJOR.MINOR.PATCH`. A tag identifica o código publicado; commits de desenvolvimento não recebem tag de release.
+## Desenvolvimento e versões
+
+O fluxo definido para o projeto usa `develop` como integração e base para `feature/<nome>`. As funcionalidades retornam à `develop` por pull request; a `main` recebe versões após validação. Correções urgentes de versões publicadas usam `hotfix/<nome>` a partir da `main`, com integração também na `develop`. Commits feitos em conjunto registram a autoria adicional com trailers `Co-authored-by`.
+
+A versão segue `MAJOR.MINOR.PATCH+BUILD` no [pubspec.yaml](pubspec.yaml): `MINOR` para novas funcionalidades, `PATCH` para correções e `MAJOR` para mudanças incompatíveis após a versão estável 1.0.0. Durante a fase `0.x`, novas versões menores também podem conter mudanças incompatíveis. O número `BUILD` cresce a cada versão distribuída nas lojas.
+
+Atualize o [CHANGELOG.md](CHANGELOG.md) ao preparar uma versão. Antes de integrar uma release na `main`, valide o aplicativo e execute os testes e a análise estática. As releases usam tags anotadas no formato `vMAJOR.MINOR.PATCH`. A versão `0.1.0+1` está registrada como em desenvolvimento no changelog.
