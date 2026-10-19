@@ -13,6 +13,7 @@ double? _parseKg(String? value) {
 bool _validKg(double? quantity) =>
     quantity != null &&
     quantity >= 0 &&
+    (quantity * 10).isFinite &&
     (quantity * 10 - (quantity * 10).round()).abs() < 1e-7;
 
 int? _parsePrice(String value) {
@@ -341,7 +342,7 @@ class _AllocationScreenState extends State<AllocationScreen> {
           const Text('Pedidos das escolas',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
           const Text(
-              'As escolas são predefinidas. Deixe em branco quando não houver pedido.',
+              'Deixe em branco quando não houver pedido. A soma dos pedidos não pode ultrapassar o recebido.',
               style: TextStyle(color: NativaColors.gray)),
           const SizedBox(height: 12),
           Form(
@@ -367,13 +368,22 @@ class _AllocationScreenState extends State<AllocationScreen> {
                                       const TextInputType.numberWithOptions(
                                           decimal: true),
                                   decoration: const InputDecoration(
-                                      labelText: 'Pedido (kg)'),
+                                      labelText: 'Pedido (kg)',
+                                      errorMaxLines: 3),
                                   onChanged: (_) => setState(() {}),
-                                  validator: (value) =>
-                                      value?.trim().isEmpty == true ||
-                                              _validKg(_parseKg(value))
-                                          ? null
-                                          : 'Use 0,1 kg.',
+                                  autovalidateMode:
+                                      AutovalidateMode.onUserInteraction,
+                                  validator: (value) {
+                                    if (value?.trim().isNotEmpty == true &&
+                                        !_validKg(_parseKg(value))) {
+                                      return 'Use 0,1 kg.';
+                                    }
+                                    if (preview.requestedKg >
+                                        _delivery.availableKg + 1e-7) {
+                                      return 'Soma acima do recebido';
+                                    }
+                                    return null;
+                                  },
                                 )),
                           ]))),
               ])),
@@ -387,11 +397,12 @@ class _AllocationScreenState extends State<AllocationScreen> {
                       children: [
                         Text('Total pedido: ${formatKg(preview.requestedKg)}'),
                         Text(
-                            'A distribuir: ${formatKg(preview.distributedKg)}'),
+                            'Disponível para os pedidos: ${formatKg((preview.receivedKg - preview.requestedKg).clamp(0, preview.receivedKg).toDouble())}'),
                         if (preview.shortageKg > 1e-7)
                           Text(
-                              'Faltam ${formatKg(preview.shortageKg)}. O estoque será rateado proporcionalmente.'),
-                        if (preview.remainderKg > 1e-7)
+                              'Limite excedido em ${formatKg(preview.shortageKg)}. Reduza os pedidos antes de salvar.'),
+                        if (preview.remainderKg > 1e-7 &&
+                            preview.shortageKg <= 1e-7)
                           Text(
                               'Saldo: ${formatKg(preview.remainderKg)}. Confirme e informe se houve sobra ou perda.'),
                       ]))),

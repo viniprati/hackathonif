@@ -3,8 +3,17 @@ import 'proportional_allocation.dart';
 
 class AllocationPreview {
   AllocationPreview(double receivedKg, List<SchoolRequest> requests)
-      : allocations =
-            List.unmodifiable(distributeProportionally(receivedKg, requests)),
+      : allocations = List.unmodifiable(
+            requests.fold<double>(0, (sum, item) => sum + item.requestedKg) >
+                    receivedKg + 1e-7
+                ? [
+                    for (final request in requests)
+                      Allocation(
+                          school: request.school,
+                          requestedKg: request.requestedKg,
+                          allocatedKg: 0)
+                  ]
+                : distributeProportionally(receivedKg, requests)),
         receivedKg = receivedKg,
         requestedKg =
             requests.fold<double>(0, (sum, item) => sum + item.requestedKg);
@@ -17,5 +26,5 @@ class AllocationPreview {
   double get remainderKg =>
       (receivedKg - distributedKg).clamp(0, receivedKg).toDouble();
   double get shortageKg =>
-      (requestedKg - distributedKg).clamp(0, double.infinity).toDouble();
+      (requestedKg - receivedKg).clamp(0, double.infinity).toDouble();
 }

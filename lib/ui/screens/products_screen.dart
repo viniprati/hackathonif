@@ -92,18 +92,26 @@ class _ProductsScreenState extends State<ProductsScreen> {
                                         icon: Icons.inventory_2_outlined,
                                         label: 'Produtos',
                                         value: '${products.length}',
+                                        onTap: () => _showSummary(context,
+                                            'Produtos cadastrados', products),
                                       ),
                                       _MetricCard(
                                         width: cardWidth,
                                         icon: Icons.scale_outlined,
                                         label: 'Recebido',
                                         value: formatKg(received),
+                                        onTap: () => _showSummary(
+                                            context,
+                                            'Recebimentos por produto',
+                                            products),
                                       ),
                                       _MetricCard(
                                         width: cardWidth,
                                         icon: Icons.pie_chart_outline,
                                         label: 'Rateado',
                                         value: formatKg(distributed),
+                                        onTap: () => _showSummary(context,
+                                            'Rateios por escola', products),
                                       ),
                                     ],
                                   );
@@ -214,6 +222,69 @@ class _ProductsScreenState extends State<ProductsScreen> {
         },
       );
 
+  void _showSummary(
+      BuildContext context, String title, List<ProductSummary> products) {
+    final schools = <String, double>{};
+    for (final product in products) {
+      for (final delivery in product.deliveries) {
+        for (final allocation in delivery.allocations) {
+          if (allocation.allocatedKg > 0) {
+            schools.update(
+                allocation.school, (kg) => kg + allocation.allocatedKg,
+                ifAbsent: () => allocation.allocatedKg);
+          }
+        }
+      }
+    }
+    showDialog<void>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+              title: Text(title),
+              scrollable: true,
+              content: SizedBox(
+                  width: 600,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: title == 'Rateios por escola'
+                        ? [
+                            const Text(
+                                'Quantidades rateadas nos lotes cadastrados, de todos os períodos.'),
+                            if (schools.isEmpty)
+                              const Text('Nenhum rateio registrado.'),
+                            for (final school in schools.entries)
+                              ListTile(
+                                  title: Text(school.key),
+                                  subtitle: Text(formatKg(school.value))),
+                          ]
+                        : [
+                            const Text(
+                                'Toque em um produto para ver seus lotes. Todos os períodos.'),
+                            for (final product in products)
+                              ListTile(
+                                title: Text(product.name),
+                                subtitle: Text(title == 'Produtos cadastrados'
+                                    ? '${product.lotCount} lote(s) • ${product.pendingCount} pendente(s)'
+                                    : '${formatKg(product.receivedKg)} recebidos'),
+                                trailing: const Icon(Icons.chevron_right),
+                                onTap: () {
+                                  Navigator.pop(dialogContext);
+                                  Navigator.of(context).push(
+                                      MaterialPageRoute<void>(
+                                          builder: (_) => ProductDetailsScreen(
+                                              viewModel: widget.viewModel,
+                                              productKey: product.key)));
+                                },
+                              ),
+                          ],
+                  )),
+              actions: [
+                TextButton(
+                    onPressed: () => Navigator.pop(dialogContext),
+                    child: const Text('Fechar'))
+              ],
+            ));
+  }
+
   Widget _filterChip(String label, _ProductFilter filter) => FilterChip(
         label: Text(label),
         selected: _filter == filter,
@@ -227,12 +298,14 @@ class _MetricCard extends StatelessWidget {
     required this.icon,
     required this.label,
     required this.value,
+    required this.onTap,
   });
 
   final double width;
   final IconData icon;
   final String label;
   final String value;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) => SizedBox(
@@ -240,23 +313,30 @@ class _MetricCard extends StatelessWidget {
         child: Card(
           margin: EdgeInsets.zero,
           color: NativaColors.lightGreen,
-          child: Padding(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Icon(icon, color: NativaColors.darkGreen, size: 22),
-                const SizedBox(height: 10),
-                Text(label, style: const TextStyle(fontSize: 12)),
-                Text(
-                  value,
-                  style: const TextStyle(
-                    fontSize: 19,
-                    fontWeight: FontWeight.bold,
-                    color: NativaColors.darkGreen,
+          child: InkWell(
+            key: ValueKey('product-metric-$label'),
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(18),
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(icon, color: NativaColors.darkGreen, size: 22),
+                  const SizedBox(height: 10),
+                  Text(label, style: const TextStyle(fontSize: 12)),
+                  const Text('Ver detalhes',
+                      style: TextStyle(decoration: TextDecoration.underline)),
+                  Text(
+                    value,
+                    style: const TextStyle(
+                      fontSize: 19,
+                      fontWeight: FontWeight.bold,
+                      color: NativaColors.darkGreen,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),

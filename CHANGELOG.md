@@ -1,5 +1,11 @@
 # Histórico de versões
 
+## Em desenvolvimento
+
+- Indicadores de produtos clicáveis, com detalhamento de produtos, recebimentos e rateios por escola.
+- Bloqueio de pedidos cuja soma ultrapassa o recebido, no formulário e na camada de dados.
+- Relatórios com gráficos de pizza, colunas por alimento e barras por escola, com valores e lotes em seções expansíveis.
+
 ## 1.0.1+2 — 19/10/2026
 
 - Controles globais de tamanho das letras, com ampliação até 200% e respeito à fonte do aparelho; calendário e indicadores adaptados para leitura ampliada.

@@ -6,6 +6,7 @@ import '../../data/report_pdf.dart';
 import '../../domain/stock_report.dart';
 import '../../domain/invoice_reference.dart';
 import '../theme.dart';
+import '../report_charts.dart';
 import '../view_models/delivery_view_model.dart';
 import 'delivery_screen.dart';
 
@@ -55,7 +56,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
                                 color: NativaColors.darkGreen)),
                         const SizedBox(height: 6),
                         const Text(
-                            'Alimentos, distribuição salva, sobras, perdas e valores registrados.'),
+                            'Escolha uma semana ou mês para acompanhar as quantidades e os valores.'),
                         const SizedBox(height: 16),
                         SegmentedButton<ReportPeriod>(
                           segments: const [
@@ -99,33 +100,54 @@ class _ReportsScreenState extends State<ReportsScreen> {
                               onPressed: () => _move(1)),
                         ]),
                         const SizedBox(height: 12),
-                        LayoutBuilder(builder: (context, constraints) {
-                          final scale =
-                              MediaQuery.textScalerOf(context).scale(14) / 14;
-                          final columns = scale > 1.3
-                              ? 1
-                              : (constraints.maxWidth >= 750 ? 3 : 2);
-                          final width =
-                              (constraints.maxWidth - 10 * (columns - 1)) /
-                                  columns;
-                          return Wrap(spacing: 10, runSpacing: 10, children: [
-                            _Metric(width, 'Recebido', report.receivedKg,
-                                report.receivedCents),
-                            _Metric(width, 'Distribuído', report.distributedKg,
-                                report.distributedCents),
-                            _Metric(width, 'Sobra aproveitável',
-                                report.surplusKg, report.surplusCents),
-                            _Metric(width, 'Perda', report.lossKg,
-                                report.lossCents),
-                            _Metric(width, 'Aguardando rateio',
-                                report.pendingKg, report.pendingCents),
-                            _Metric(
-                                width,
-                                'Sem classificação',
-                                report.unclassifiedKg,
-                                report.unclassifiedCents),
-                          ]);
-                        }),
+                        ReportCharts(report: report),
+                        const SizedBox(height: 16),
+                        ExpansionTile(
+                          tilePadding: EdgeInsets.zero,
+                          title:
+                              const Text('Quantidades e valores em detalhes'),
+                          subtitle: const Text(
+                              'Valores de alimentos com preço informado'),
+                          children: [
+                            LayoutBuilder(builder: (context, constraints) {
+                              final scale =
+                                  MediaQuery.textScalerOf(context).scale(14) /
+                                      14;
+                              final columns = scale > 1.3
+                                  ? 1
+                                  : (constraints.maxWidth >= 750 ? 3 : 2);
+                              final width =
+                                  (constraints.maxWidth - 10 * (columns - 1)) /
+                                      columns;
+                              return Wrap(
+                                  spacing: 10,
+                                  runSpacing: 10,
+                                  children: [
+                                    _Metric(
+                                        width,
+                                        'Recebido',
+                                        report.receivedKg,
+                                        report.receivedCents),
+                                    _Metric(
+                                        width,
+                                        'Distribuído',
+                                        report.distributedKg,
+                                        report.distributedCents),
+                                    _Metric(width, 'Sobra aproveitável',
+                                        report.surplusKg, report.surplusCents),
+                                    _Metric(width, 'Perda', report.lossKg,
+                                        report.lossCents),
+                                    _Metric(width, 'Aguardando rateio',
+                                        report.pendingKg, report.pendingCents),
+                                    _Metric(
+                                        width,
+                                        'Sem classificação',
+                                        report.unclassifiedKg,
+                                        report.unclassifiedCents),
+                                  ]);
+                            }),
+                          ],
+                        ),
                         const SizedBox(height: 12),
                         Text(
                             'Taxa de perdas: ${(report.lossRate * 100).toStringAsFixed(2).replaceAll('.', ',')}%',
@@ -160,14 +182,14 @@ class _ReportsScreenState extends State<ReportsScreen> {
                               _downloading ? 'Gerando PDF...' : 'Baixar PDF'),
                         ),
                         const SizedBox(height: 22),
-                        const Text('Alimentos por lote',
+                        const Text('Detalhamento dos lotes',
                             style: TextStyle(
                                 fontSize: 20, fontWeight: FontWeight.bold)),
+                        const Text(
+                            'Abra um lote para conferir quantidades, valores e o rateio.'),
                         if (report.lines.isEmpty)
-                          const Padding(
-                              padding: EdgeInsets.symmetric(vertical: 14),
-                              child: Text(
-                                  'Nenhum montante cadastrado neste período.')),
+                          const Text(
+                              'Nenhum montante cadastrado neste período.'),
                         const SizedBox(height: 8),
                       ]);
                 }
@@ -176,7 +198,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         const SizedBox(height: 18),
-                        const Text('Distribuição por escola',
+                        const Text('Valores dos alimentos por escola',
                             style: TextStyle(
                                 fontSize: 20, fontWeight: FontWeight.bold)),
                         if (report.schools.isEmpty)
@@ -199,7 +221,10 @@ class _ReportsScreenState extends State<ReportsScreen> {
                         const SizedBox(height: 8),
                         Text(
                             'No período: ${report.invoiceReferences.length} notas • ${formatMoney(report.invoicesCents)}'),
-                        for (final invoice in widget.viewModel.invoices)
+                        if (report.invoiceReferences.isEmpty)
+                          const Text(
+                              'Nenhuma nota de referência neste período.'),
+                        for (final invoice in report.invoiceReferences)
                           Card(
                               child: Column(children: [
                             ListTile(
@@ -222,17 +247,25 @@ class _ReportsScreenState extends State<ReportsScreen> {
                 }
                 final line = report.lines[index - 1];
                 return Card(
-                    child: ListTile(
-                  onTap: () => Navigator.of(context).push(
-                      MaterialPageRoute<void>(
-                          builder: (_) => DeliveryDetails(
-                              viewModel: widget.viewModel,
-                              deliveryId: line.delivery.id))),
+                    child: ExpansionTile(
                   title: Text(line.delivery.product,
                       style: const TextStyle(fontWeight: FontWeight.bold)),
                   subtitle: Text(
-                      '${line.delivery.batchName} • ${formatDate(line.delivery.date)}\nRecebido: ${formatKg(line.delivery.availableKg)}\nDistribuído: ${formatKg(line.distributedKg)} • Sobra: ${formatKg(line.surplusKg)}\nPerda: ${formatKg(line.lossKg)} • Pendente: ${formatKg(line.pendingKg)}\n${line.hasPrice ? '${formatMoney(line.delivery.unitPriceCents!)} / kg • ${formatMoney(line.receivedCents)}' : 'Preço não informado'}'),
-                  isThreeLine: true,
+                      '${line.delivery.batchName} • ${formatDate(line.delivery.date)}'),
+                  childrenPadding: const EdgeInsets.all(16),
+                  children: [
+                    Text(
+                        '${line.delivery.batchName} • ${formatDate(line.delivery.date)}\nRecebido: ${formatKg(line.delivery.availableKg)}\nDistribuído: ${formatKg(line.distributedKg)} • Sobra: ${formatKg(line.surplusKg)}\nPerda: ${formatKg(line.lossKg)} • Pendente: ${formatKg(line.pendingKg)}\n${line.hasPrice ? '${formatMoney(line.delivery.unitPriceCents!)} / kg • ${formatMoney(line.receivedCents)}' : 'Preço não informado'}'),
+                    TextButton.icon(
+                      onPressed: () => Navigator.of(context).push(
+                          MaterialPageRoute<void>(
+                              builder: (_) => DeliveryDetails(
+                                  viewModel: widget.viewModel,
+                                  deliveryId: line.delivery.id))),
+                      icon: const Icon(Icons.open_in_new),
+                      label: const Text('Ver rateio do lote'),
+                    ),
+                  ],
                 ));
               },
             ),
