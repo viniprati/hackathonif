@@ -8,6 +8,60 @@ export interface PushGateway {
   send(notice: BatchNotification): Promise<void>;
 }
 const topic = 'nativa-montantes';
+
+interface TokenTopicClient {
+  subscribeToTopicLegacy(
+    tokens: string[],
+    topic: string,
+  ): Promise<{ failureCount: number; errors: { error: { code: string } }[] }>;
+  unsubscribeFromTopicLegacy(
+    tokens: string[],
+    topic: string,
+  ): Promise<{ failureCount: number; errors: { error: { code: string } }[] }>;
+}
+const safeProviderCodes = new Set([
+  'messaging/invalid-registration-token',
+  'messaging/registration-token-not-registered',
+  'messaging/authentication-error',
+  'messaging/mismatched-credential',
+  'messaging/server-unavailable',
+  'messaging/internal-error',
+  'messaging/unknown-error',
+  'messaging/topics-subscription-rate-exceeded',
+  'messaging/too-many-topics',
+  'app/invalid-credential',
+  'app/network-error',
+]);
+export function safePushErrorCode(error: unknown): string {
+  if (
+    error &&
+    typeof error === 'object' &&
+    'code' in error &&
+    typeof error.code === 'string' &&
+    safeProviderCodes.has(error.code)
+  )
+    return error.code;
+  return 'unknown';
+}
+
+/** Usa a gestão de tópicos compatível com os tokens getToken() do APK 1.4.0.
+ * A API v1 do Admin 14 retornou authentication-error neste projeto; a API
+ * compatível foi validada com a mesma credencial. Migrar antes de 29/09/2027.
+ */
+export async function subscribeRegistrationToken(
+  client: TokenTopicClient,
+  token: string,
+  enabled: boolean,
+): Promise<void> {
+  const result = enabled
+    ? await client.subscribeToTopicLegacy([token], topic)
+    : await client.unsubscribeFromTopicLegacy([token], topic);
+  if (result.failureCount) {
+    const error = new Error('PushSubscriptionFailed') as Error & { code: string };
+    error.code = safePushErrorCode(result.errors[0]?.error);
+    throw error;
+  }
+}
 export function firebasePush(raw: string | undefined): PushGateway | undefined {
   if (!raw) return undefined;
   const credentials = JSON.parse(raw) as ServiceAccount;
@@ -15,10 +69,7 @@ export function firebasePush(raw: string | undefined): PushGateway | undefined {
   const messaging = getMessaging(app);
   return {
     async subscribe(token, enabled) {
-      const result = enabled
-        ? await messaging.subscribeToTopic([token], topic)
-        : await messaging.unsubscribeFromTopic([token], topic);
-      if (result.failureCount) throw new Error('PushSubscriptionFailed');
+      await subscribeRegistrationToken(messaging, token, enabled);
     },
     async send(notice) {
       // Não coloca nomes ou dados financeiros na tela bloqueada.

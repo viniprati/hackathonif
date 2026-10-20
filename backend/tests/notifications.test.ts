@@ -134,3 +134,58 @@ test('push ausente informa indisponibilidade sem fingir inscrição', async (t) 
   assert.equal(result.statusCode, 503);
   assert.equal(result.json().error.code, 'PUSH_NOT_CONFIGURED');
 });
+
+test('tokens do APK usam inscrição e remoção compatíveis, com falha real preservada', async () => {
+  const { subscribeRegistrationToken } = await import('../src/push.js');
+  const calls: string[] = [];
+  const client = {
+    async subscribeToTopicLegacy(tokens: string[], topic: string) {
+      calls.push('subscribe');
+      assert.deepEqual(tokens, ['test-token']);
+      assert.equal(topic, 'nativa-montantes');
+      return { failureCount: 0, errors: [] };
+    },
+    async unsubscribeFromTopicLegacy() {
+      calls.push('unsubscribe');
+      return { failureCount: 1, errors: [{ error: { code: 'messaging/authentication-error' } }] };
+    },
+  };
+  await subscribeRegistrationToken(client, 'test-token', true);
+  await assert.rejects(subscribeRegistrationToken(client, 'test-token', false), {
+    code: 'messaging/authentication-error',
+  });
+  assert.deepEqual(calls, ['subscribe', 'unsubscribe']);
+});
+
+test('falha de inscrição retorna orientação sem token ou mensagem privada do provedor', async (t) => {
+  const app = await buildApp({
+    repository: new MemoryRepository(),
+    ...credentials,
+    logger: false,
+    push: {
+      async subscribe() {
+        throw Object.assign(new Error('private-provider-detail'), {
+          code: 'messaging/invalid-registration-token',
+        });
+      },
+      async send() {},
+    },
+  });
+  t.after(() => app.close());
+  const login = await app.inject({
+    method: 'POST',
+    url: '/v1/auth/login',
+    payload: { cpf: credentials.mvpCpf, password: credentials.mvpPassword },
+  });
+  const token = 'private-device-token-for-test-only';
+  const result = await app.inject({
+    method: 'POST',
+    url: '/v1/notifications/push',
+    headers: { authorization: `Bearer ${login.json().accessToken}` },
+    payload: { token, enabled: true },
+  });
+  assert.equal(result.statusCode, 400);
+  assert.equal(result.json().error.code, 'PUSH_INVALID_TOKEN');
+  assert.ok(!result.body.includes(token));
+  assert.ok(!result.body.includes('private-provider-detail'));
+});
