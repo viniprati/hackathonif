@@ -1,4 +1,4 @@
-import type { PushGateway } from './push.js';
+import { safePushErrorCode, type PushGateway } from './push.js';
 import { randomUUID } from 'node:crypto';
 import Fastify, { type FastifyError } from 'fastify';
 import cors from '@fastify/cors';
@@ -156,7 +156,10 @@ export async function buildApp(options: Options) {
         }
       });
       api.get('/auth/me', async () => ({ id: 'mvp', name: 'Usuário MVP' }));
-      api.get('/notifications/push-status', async () => ({ configured: Boolean(options.push) }));
+      api.get('/notifications/push-status', async () => ({
+        configured: Boolean(options.push),
+        registrationProtocol: 'fcm-token-compatible',
+      }));
       api.post<{ Body: { token: string; enabled: boolean } }>(
         '/notifications/push',
         {
@@ -181,8 +184,44 @@ export async function buildApp(options: Options) {
                 message: 'O envio push ainda não foi configurado.',
               },
             });
-          await options.push.subscribe(request.body.token, request.body.enabled);
-          return { enabled: request.body.enabled };
+          const started = Date.now();
+          try {
+            await options.push.subscribe(request.body.token, request.body.enabled);
+            request.log.info(
+              {
+                event: 'push_subscription_updated',
+                enabled: request.body.enabled,
+                durationMs: Date.now() - started,
+                requestId: request.id,
+              },
+              'Inscrição push atualizada',
+            );
+            return { enabled: request.body.enabled };
+          } catch (error) {
+            const providerCode = safePushErrorCode(error);
+            request.log.warn(
+              {
+                event: 'push_subscription_failed',
+                providerCode,
+                enabled: request.body.enabled,
+                durationMs: Date.now() - started,
+                requestId: request.id,
+              },
+              'Falha na inscrição push',
+            );
+            const invalidToken =
+              providerCode === 'messaging/invalid-registration-token' ||
+              providerCode === 'messaging/registration-token-not-registered';
+            return reply.code(invalidToken ? 400 : 503).send({
+              error: {
+                code: invalidToken ? 'PUSH_INVALID_TOKEN' : 'PUSH_REGISTRATION_FAILED',
+                message: invalidToken
+                  ? 'O registro deste aparelho expirou. Desative e ative as notificações para tentar novamente.'
+                  : 'O serviço de notificações não confirmou o registro. Aguarde e tente novamente.',
+              },
+              requestId: request.id,
+            });
+          }
         },
       );
       await batchRoutes(api, options.repository);

@@ -1,5 +1,11 @@
 # Histórico de versões
 
+## Backend 1.4.1 — 20/10/2026
+
+- Corrige inscrição push dos tokens do APK 1.4.0 usando a API de tópicos compatível; reproduzido erro de autenticação da API nova com a mesma credencial.
+- Trata falhas de registro com códigos seguros e registra etapa, duração e ID de requisição, sem token ou conteúdo da chave.
+- Compatível com o APK 1.4.0+13 existente, sem nova instalação para esta correção.
+
 ## 1.4.0+13 — 20/10/2026
 
 - Navegação inferior sem quebra no meio das palavras e com adaptação ao tamanho das letras.

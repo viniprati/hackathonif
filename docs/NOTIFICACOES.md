@@ -66,3 +66,9 @@ Após configurar, teste com **dois aparelhos**:
 - `flutter build apk --release`: compilação concluída com o arquivo Android local e Firebase habilitado; recursos de projeto, app e remetente conferidos.
 - Firebase Admin/FCM: credencial local aprovada por validação de envio em dry-run, sem entregar mensagem a nenhum aparelho.
 - Recebimento real de push, permissão Android e abertura a partir da notificação permanecem pendentes da configuração do Railway e de aparelhos físicos. Compilar o aplicativo sem configuração Firebase não verifica esses comportamentos.
+
+## Correção de inscrição — backend 1.4.1
+
+A API de tópicos v1 do Admin SDK 14 retornou `messaging/authentication-error` com a credencial do projeto, enquanto a gestão compatível com tokens respondeu corretamente à validação de um token inválido. A inscrição e a remoção usam `subscribeToTopicLegacy`/`unsubscribeFromTopicLegacy` para manter compatibilidade com o APK 1.4.0. O envio continua usando FCM HTTP v1. A API de gestão legada é suportada até 29/09/2027; migrar as permissões/integração antes dessa data. Referência: [gestão de tópicos](https://firebase.google.com/docs/cloud-messaging/manage-topic-subscriptions).
+
+Logs de inscrição registram somente evento, código do provedor permitido, opção selecionada, duração e ID da requisição. Não registram token, chave nem mensagem bruta do Firebase.
