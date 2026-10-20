@@ -44,3 +44,22 @@ npm run build --prefix backend
 ```
 
 O último conjunto inicia MongoDB temporário e API em `127.0.0.1`, usando credenciais exclusivas de teste. Dois clientes Flutter validam criação, leitura, rateio, relatórios locais, conflito, restauração do cache e repetição após perda de resposta. Não usa o Atlas nem altera registros da demonstração. `flutter test` sozinho pula o teste que depende dessa API temporária.
+
+## Android release: abertura do cache
+
+O APK 1.2.0 foi gerado sem as regras necessárias para as classes Kotlin acessadas por JNI pelo plugin de armazenamento. O mapeamento R8 desse build renomeou `kotlin.Unit` e `kotlin.coroutines.Continuation`, alterando também a assinatura de `getString`. O build 1.2.1 preserva as seis classes indicadas no [guia oficial do Pigeon](https://flutter.googlesource.com/mirrors/packages/+/refs/heads/main/packages/pigeon/native_interop_guide.md#Step-5_Android-Release-Build-Configuration-JNI), em [proguard-rules.pro](../android/app/proguard-rules.pro).
+
+A tela de erro mostra um código de suporte: `CACHE_READ_FAILED` indica falha ao acessar o armazenamento; `CACHE_FORMAT_INVALID` indica que a leitura ocorreu, mas o conteúdo não passou na validação. O evento `local_cache_open_failed` registra somente etapa, código e tipo da exceção, sem o conteúdo do cache ou credenciais. Tentar novamente não apaga a cópia existente.
+
+O teste [local_cache_test.dart](../integration_test/local_cache_test.dart) usa o plugin real e autenticação simulada. Execute-o em um emulador/aparelho exclusivo de teste, com o Android SDK e o JDK configurados:
+
+```sh
+cd android
+./gradlew app:connectedReleaseAndroidTest -PtestRelease -Ptarget="$(pwd)/../integration_test/local_cache_test.dart"
+cd ..
+flutter build apk --release
+```
+
+O teste compila uma instalação própria com o identificador do app. Gere novamente o APK normal após o teste para distribuir a entrada `lib/main.dart`.
+
+Na revisão 1.2.1, a instrumentação release foi compilada e o mapeamento R8 confirmou a preservação das seis classes. A execução local ficou impedida: o emulador Android 37.2.12 encerrou com falha de segmentação antes de concluir a inicialização, nas duas configurações gráficas tentadas. A execução desse teste em um aparelho Android permanece pendente; a compilação não equivale à aprovação do teste nativo.

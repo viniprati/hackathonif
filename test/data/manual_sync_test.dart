@@ -9,6 +9,11 @@ import 'package:nativa/ui/view_models/delivery_view_model.dart';
 
 import '../support/fake_batch_api.dart';
 
+class UnreadableStore extends MemorySyncStore {
+  @override
+  Future<String?> read() async => throw StateError('falha nativa');
+}
+
 class BrokenStore extends MemorySyncStore {
   @override
   Future<void> write(String value) async => throw StateError('sem espaço');
@@ -166,6 +171,16 @@ void main() {
     expect(api.writes, 0);
   });
 
+  test('falha nativa é diagnosticada sem escrever ou apagar o cache', () async {
+    final cache = UnreadableStore()..value = 'cópia existente';
+    final a = device(FakeBatchApi(), cache);
+    addTearDown(a.dispose);
+    await expectLater(a.initialize(), throwsStateError);
+    expect(a.sync!.initializationFailureCode, 'CACHE_READ_FAILED');
+    expect(cache.value, 'cópia existente');
+    expect(a.deliveries, isEmpty);
+  });
+
   test('cópia local inválida não é apagada ou aplicada parcialmente', () async {
     final cache = MemorySyncStore()..value = '{"schema":99,"batches":[]}';
     final a = device(FakeBatchApi(), cache);
@@ -177,5 +192,6 @@ void main() {
     await expectLater(a.initialize(), throwsFormatException);
     expect(a.deliveries.length, 1);
     expect(cache.value, '{"schema":99,"batches":[]}');
+    expect(a.sync!.initializationFailureCode, 'CACHE_FORMAT_INVALID');
   });
 }

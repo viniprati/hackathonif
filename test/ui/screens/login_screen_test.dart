@@ -10,6 +10,15 @@ import 'package:nativa/main.dart';
 
 import '../../support/test_app.dart';
 
+class RetryReadStore extends MemorySyncStore {
+  bool unavailable = true;
+  @override
+  Future<String?> read() async {
+    if (unavailable) throw StateError('falha nativa');
+    return super.read();
+  }
+}
+
 void phoneSize(WidgetTester tester) {
   tester.view.physicalSize = const Size(390, 844);
   tester.view.devicePixelRatio = 1;
@@ -54,6 +63,29 @@ void main() {
     expect(find.text('CPF ou senha inválidos.'), findsOneWidget);
     expect(find.text('Entrar'), findsOneWidget);
     expect(find.text('Cadastrar montante'), findsNothing);
+  });
+
+  testWidgets('falha de cache mostra código e permite tentar sem apagar dados',
+      (tester) async {
+    phoneSize(tester);
+    final store = RetryReadStore()
+      ..value = '{"schema":1,"lastSyncedAt":null,"batches":[]}';
+    final original = store.value;
+    addTearDown(() => tester.pumpWidget(const SizedBox.shrink()));
+    await tester.pumpWidget(
+        NativaApp(authRepository: testAuthRepository(), syncStore: store));
+    await tester.enterText(find.byType(TextFormField).at(0), '00000000000');
+    await tester.enterText(find.byType(TextFormField).at(1), 'somente-teste');
+    await tester.tap(find.text('Entrar'));
+    await tester.pumpAndSettle();
+    expect(find.text('Código de suporte: CACHE_READ_FAILED'), findsOneWidget);
+    expect(store.value, original);
+    expect(find.text('Cadastrar montante'), findsNothing);
+    store.unavailable = false;
+    await tester.tap(find.text('Tentar novamente'));
+    await tester.pumpAndSettle();
+    expect(find.text('Cadastrar montante'), findsOneWidget);
+    expect(store.value, original);
   });
 
   testWidgets('Perfil consulta a versão do pacote e sair encerra a sessão',

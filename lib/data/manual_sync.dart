@@ -44,6 +44,7 @@ class ManualSync extends ChangeNotifier {
   bool sessionExpired = false;
   String? message;
   DateTime? lastSyncedAt;
+  String? initializationFailureCode;
   List<SyncConflict> get conflicts => List.unmodifiable(_conflicts);
 
   Map<int, List<Delivery>> get _groups {
@@ -62,40 +63,56 @@ class ManualSync extends ChangeNotifier {
       .length;
 
   Future<void> initialize() async {
-    final raw = await store.read();
-    if (raw == null) return;
-    final json = jsonDecode(raw) as Map<String, dynamic>;
-    if (json['schema'] != 1) {
-      throw const FormatException('Formato de cópia local desconhecido.');
+    initializationFailureCode = null;
+    var stage = 'read';
+    try {
+      final raw = await store.read();
+      if (raw == null) return;
+      stage = 'decode';
+      final json = jsonDecode(raw) as Map<String, dynamic>;
+      if (json['schema'] != 1) {
+        throw const FormatException('Formato de cópia local desconhecido.');
+      }
+      final links = <int, _Link>{};
+      final deliveries = <Delivery>[];
+      final seen = <int>{};
+      for (final raw in json['batches'] as List<dynamic>) {
+        final record = raw as Map<String, dynamic>;
+        final id = record['localId'] as int;
+        if (!seen.add(id)) {
+          throw const FormatException('Montante local repetido.');
+        }
+        final batch =
+            BatchSnapshot.fromJson(record['data'] as Map<String, dynamic>);
+        final itemIds = record['itemIds'] as Map<String, dynamic>;
+        for (final item in batch.items) {
+          deliveries
+              .add(item.toDelivery(itemIds[item.product] as int, id, batch));
+        }
+        if (record['link'] != null) {
+          links[id] = _Link.fromJson(record['link'] as Map<String, dynamic>);
+        }
+      }
+      final date = json['lastSyncedAt'] as String?;
+      final last = date == null ? null : DateTime.parse(date);
+      // Só substitui a cópia em memória depois de conferir o arquivo inteiro.
+      repository.restoreAll(deliveries);
+      _links
+        ..clear()
+        ..addAll(links);
+      lastSyncedAt = last;
+    } catch (error) {
+      initializationFailureCode =
+          stage == 'read' ? 'CACHE_READ_FAILED' : 'CACHE_FORMAT_INVALID';
+      // Somente campos permitidos: nunca registra o cache, credenciais ou mensagens nativas.
+      debugPrint(jsonEncode({
+        'event': 'local_cache_open_failed',
+        'stage': stage,
+        'code': initializationFailureCode,
+        'errorType': error.runtimeType.toString(),
+      }));
+      rethrow;
     }
-    final links = <int, _Link>{};
-    final deliveries = <Delivery>[];
-    final seen = <int>{};
-    for (final raw in json['batches'] as List<dynamic>) {
-      final record = raw as Map<String, dynamic>;
-      final id = record['localId'] as int;
-      if (!seen.add(id)) {
-        throw const FormatException('Montante local repetido.');
-      }
-      final batch =
-          BatchSnapshot.fromJson(record['data'] as Map<String, dynamic>);
-      final itemIds = record['itemIds'] as Map<String, dynamic>;
-      for (final item in batch.items) {
-        deliveries
-            .add(item.toDelivery(itemIds[item.product] as int, id, batch));
-      }
-      if (record['link'] != null) {
-        links[id] = _Link.fromJson(record['link'] as Map<String, dynamic>);
-      }
-    }
-    final date = json['lastSyncedAt'] as String?;
-    final last = date == null ? null : DateTime.parse(date);
-    // Só substitui a cópia em memória depois de conferir o arquivo inteiro.
-    repository.restoreAll(deliveries);
-    _links
-      ..clear()
-      ..addAll(links);
-    lastSyncedAt = last;
   }
 
   String _encode() => jsonEncode({
