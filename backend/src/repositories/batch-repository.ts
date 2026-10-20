@@ -1,4 +1,4 @@
-import type { Collection, Db, Filter } from 'mongodb';
+import { MongoServerError, type Collection, type Db, type Filter } from 'mongodb';
 import type { Batch } from '../domain/batch.js';
 
 export interface BatchFilter {
@@ -8,6 +8,7 @@ export interface BatchFilter {
 }
 export interface BatchRepository {
   insert(batch: Batch): Promise<void>;
+  insertIfAbsent(batch: Batch): Promise<boolean>;
   get(id: string): Promise<Batch | null>;
   list(filter: BatchFilter, offset: number, limit: number): Promise<Batch[]>;
   count(filter: BatchFilter): Promise<number>;
@@ -26,6 +27,19 @@ export class MongoBatchRepository implements BatchRepository {
   }
   async insert(batch: Batch) {
     await this.collection.insertOne({ _id: batch.id, ...batch });
+  }
+  async insertIfAbsent(batch: Batch) {
+    try {
+      const result = await this.collection.updateOne(
+        { _id: batch.id },
+        { $setOnInsert: { _id: batch.id, ...batch } },
+        { upsert: true },
+      );
+      return result.upsertedCount === 1;
+    } catch (error) {
+      if (error instanceof MongoServerError && error.code === 11000) return false;
+      throw error;
+    }
   }
   async get(id: string) {
     const doc = await this.collection.findOne({ _id: id });

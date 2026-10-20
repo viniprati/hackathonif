@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../theme.dart';
+import '../sync_card.dart';
 import '../app_version_tile.dart';
 import '../view_models/delivery_view_model.dart';
 import 'batch_screen.dart';
@@ -33,7 +34,8 @@ class _AppShellState extends State<AppShell> {
             BatchesScreen(viewModel: widget.viewModel),
             ProductsScreen(viewModel: widget.viewModel),
             ReportsScreen(viewModel: widget.viewModel),
-            ProfileScreen(onSignOut: widget.onSignOut),
+            ProfileScreen(
+                viewModel: widget.viewModel, onSignOut: widget.onSignOut),
           ];
           final destinations = const [
             NavigationDestination(
@@ -151,7 +153,9 @@ class _AppShellState extends State<AppShell> {
 }
 
 class ProfileScreen extends StatelessWidget {
-  const ProfileScreen({super.key, required this.onSignOut});
+  const ProfileScreen(
+      {super.key, required this.onSignOut, required this.viewModel});
+  final DeliveryViewModel viewModel;
   final VoidCallback onSignOut;
 
   @override
@@ -205,6 +209,10 @@ class ProfileScreen extends StatelessWidget {
                   ],
                 ),
               ),
+              if (viewModel.sync != null) ...[
+                const SizedBox(height: 16),
+                SyncCard(sync: viewModel.sync!, onSessionExpired: onSignOut),
+              ],
               const SizedBox(height: 24),
               OutlinedButton.icon(
                 onPressed: onSignOut,

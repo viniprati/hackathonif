@@ -13,14 +13,16 @@ double? _parseKg(String? value) {
 bool _validKg(double? quantity) =>
     quantity != null &&
     quantity >= 0 &&
+    quantity <= 1000000 &&
     (quantity * 10).isFinite &&
     (quantity * 10 - (quantity * 10).round()).abs() < 1e-7;
 
 int? _parsePrice(String value) {
   if (!RegExp(r'^\d+([,.]\d{1,2})?$').hasMatch(value.trim())) return null;
   final parts = value.trim().replaceAll(',', '.').split('.');
-  return int.tryParse(
+  final price = int.tryParse(
       '${parts[0]}${parts.length == 1 ? '00' : parts[1].padRight(2, '0')}');
+  return price != null && price <= 1000000 ? price : null;
 }
 
 class _ItemInputs {
@@ -85,6 +87,7 @@ class _NewBatchDialogState extends State<NewBatchDialog> {
                   const SizedBox(height: 12),
                   TextFormField(
                       controller: _name,
+                      maxLength: 120,
                       decoration:
                           const InputDecoration(labelText: 'Nome do montante'),
                       validator: (value) => value?.trim().isNotEmpty == true
@@ -217,7 +220,7 @@ class _NewBatchDialogState extends State<NewBatchDialog> {
                                         _validKg(_parseKg(value)) &&
                                                 (_parseKg(value) ?? 0) >= 0.1
                                             ? null
-                                            : 'Use ao menos 0,1 kg.',
+                                            : 'Use entre 0,1 e 1.000.000 kg.',
                                   )),
                                   const SizedBox(width: 8),
                                   Expanded(

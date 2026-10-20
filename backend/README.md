@@ -16,7 +16,7 @@ Backend inicial em TypeScript para o MVP, separado do aplicativo Flutter. Usa Fa
 
 A API inicia sem montantes fictícios. Os catálogos e as notas são referências fixas copiadas do projeto, não consultas automáticas às escolas, associações ou serviços de notas fiscais.
 
-**O Flutter ainda usa o repositório local em memória.** O login Flutter já usa JWT desta API. A integração dos montantes e relatórios e a persistência das preferências da interface são etapas seguintes. O PDF continua sendo gerado pelo Flutter; esta API retorna relatórios em JSON, com os dados necessários para gráficos e documentos.
+**O Flutter usa o login JWT e a sincronização manual desta API.** O botão no Perfil envia edições locais e busca montantes do MongoDB, com cache local e revisão de conflitos. Gráficos e PDFs são calculados no Flutter a partir dessa cópia; não consultam o endpoint de relatórios automaticamente. Veja [sincronização](../docs/SINCRONIZACAO.md).
 
 ## Pré-requisitos e configuração
 
@@ -94,7 +94,7 @@ Cadastre `MONGO_URI`, `MONGO_DB_NAME`, `JWT_SECRET`, `MVP_CPF` e `MVP_PASSWORD` 
 
 `NODE_ENV=production` encerra esta API por decisão explícita da configuração atual. Usar `development` permite a demonstração, mas não implementa usuários, permissões ou autenticação apropriados para uso real. A URL pública e as variáveis efetivas do Railway precisam ser conferidas no ambiente publicado; esta seção descreve o contrato esperado, não comprova um deploy.
 
-O Flutter usa `API_BASE_URL` via `--dart-define`, com padrão `https://hackathonif-production.up.railway.app`. O login já consulta a API; os montantes continuam em memória no Flutter. Configure `CORS_ORIGINS` para permitir o login pelo navegador. O APK usa HTTPS e não depende de CORS.
+O Flutter usa `API_BASE_URL` via `--dart-define`, com padrão `https://hackathonif-production.up.railway.app`. Login e sincronização usam a mesma URL. Configure `CORS_ORIGINS` para permitir a interface Web; o servidor permite GET, HEAD, POST e PUT nas origens autorizadas. O APK usa HTTPS e não depende de CORS.
 
 ## Endpoints
 
@@ -111,6 +111,7 @@ Base local: `http://127.0.0.1:3000`. Todas as rotas `/v1`, exceto o login, exige
 | `GET /v1/catalog/invoices`                                | Notas e itens de referência.                                                                               |
 | `POST /v1/batches`                                        | Cadastra montante com revisão inicial zero.                                                                |
 | `GET /v1/batches`                                         | Lista montantes. Filtros `from`, `to` inclusivo, `status=pending\|completed`, `page` e `limit` de 1 a 100. |
+| `PUT /v1/batches/:batchId/sync`                           | Cria ou substitui um montante inteiro com revisão, validação atômica e reenvio idempotente.                |
 | `GET /v1/batches/:batchId`                                | Montante, revisão e alimentos com identificadores.                                                         |
 | `PUT /v1/batches/:batchId/items/:itemId/allocation`       | Salva a distribuição e classificação do saldo de um alimento.                                              |
 | `GET /v1/reports/foods?period=month&reference=2026-10-19` | Relatório mensal; use `period=week` para a semana de segunda a domingo que contém a referência.            |
@@ -137,7 +138,7 @@ Exemplo de corpo para cadastro de montante:
 - Quantidades usam kg em passos de 0,1; internamente são armazenadas como inteiros de décimos de kg. O limite inicial é 1.000.000 kg por alimento.
 - Valores monetários são inteiros em centavos. O limite inicial do preço é 1.000.000 centavos/kg. Se o preço não for conhecido, omita `unitPriceCents` ou use `null`; não use zero para representar um preço desconhecido.
 - Vincular uma nota exige que alimento e preço correspondam ao item transcrito. Omitir a nota permite preço informado manualmente. O preço de referência do catálogo não é aplicado automaticamente a um recebimento.
-- Identificadores são UUIDs gerados pelo servidor. `status`, cálculos e datas de criação não podem ser definidos no cadastro pelo cliente.
+- No cadastro por POST, identificadores são UUIDs gerados pelo servidor. `status`, cálculos e datas de criação não podem ser definidos no cadastro pelo cliente.
 
 Exemplo de distribuição, quando o recebido é 100 kg e há saldo de 40 kg:
 
@@ -158,6 +159,12 @@ Outros retornos: **400** para estrutura/tipos inválidos; **401** para sessão a
 
 Os relatórios preservam centavos ao dividir valores entre situações e escolas. Recebimentos sem preço aparecem em `unpricedCount` e deixam os valores parciais. Montantes pendentes não são tratados como perdas. Há um limite de 10.000 montantes por relatório; os totais das notas de referência não são somados ao estoque. A finalização comprova o salvamento do rateio, não uma entrega física.
 
+## Sincronização do Flutter
+
+`PUT /v1/batches/:batchId/sync` recebe um UUID v4 gerado pelo cliente **antes** do primeiro envio. O corpo contém os campos do cadastro, `revision` (`null` na criação; número conhecido na atualização) e, em cada alimento, `status`, `requests` e `lossKg`. Alimentos pendentes não podem conter pedidos positivos ou perdas; finalizados exigem classificação da perda. A confirmação do saldo ocorre no formulário Flutter antes de salvar localmente.
+
+O servidor valida o montante inteiro antes de qualquer escrita. A criação é condicional e a atualização compara a revisão atomicamente. Repetir o mesmo conteúdo retorna o registro existente sem incrementar a revisão. Conteúdo diferente com revisão desatualizada retorna 409. Uma atualização com revisão não nula nunca recria silenciosamente um registro removido. A revisão é do montante, não de cada alimento.
+
 ## Testes e verificações
 
 ```sh
@@ -169,6 +176,14 @@ npm audit --omit=dev
 ```
 
 Os testes comuns usam injeção HTTP do Fastify e repositório de teste em memória; não acessam o Atlas. Os testes de integração iniciam um processo MongoDB local temporário com `mongodb-memory-server-core`, verificam persistência, índices, filtros e concorrência real e encerram a instância ao terminar. Na primeira execução, essa ferramenta baixa um binário MongoDB e precisa de acesso à Internet e bibliotecas nativas compatíveis.
+
+Para incluir o fluxo com dois clientes Flutter reais via HTTP (a partir da raiz):
+
+```sh
+FLUTTER_BIN="$(command -v flutter)" npm run test:integration --prefix backend
+```
+
+Esse teste inicia API e MongoDB locais isolados, valida conflito, reinício e reenvio sem duplicação. Sem `FLUTTER_BIN`, esse caso é pulado. Os testes de integração são executados sequencialmente.
 
 Nenhum teste usa a credencial Atlas do arquivo local para criar, remover ou popular bancos. Para conferir somente a conexão configurada, use `npm run db:check`.
 
@@ -188,7 +203,7 @@ tests/integration/            MongoDB local temporário
 
 ## Próximos passos
 
-- Integrar o repositório de montantes Flutter à API, incluindo tratamento de falhas e conflitos. O login já está integrado; o token permanece apenas em memória e a sessão expirada retorna ao login.
+- Evoluir o cache do MVP e a resolução de conflitos por campo; atualmente o usuário pode preservar a edição local ou substituí-la explicitamente pela versão atual do banco.
 - Substituir a conta local de demonstração por usuários persistidos, perfis de acesso e recuperação de senha.
 - Definir hospedagem, HTTPS, configuração de proxy e estratégia de backup.
 - Revisar as três entradas originais do protótipo e validar com a associação quais escolas públicas cadastradas participam da distribuição.

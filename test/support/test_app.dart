@@ -6,6 +6,8 @@ import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:nativa/data/auth_repository.dart';
+import 'package:nativa/data/delivery_repository.dart';
+import 'package:nativa/data/sync_store.dart';
 import 'package:nativa/main.dart';
 
 AuthRepository testAuthRepository() => AuthRepository(
@@ -26,5 +28,8 @@ NativaApp testApp(WidgetTester tester) {
       buildNumber: '42',
       buildSignature: '');
   addTearDown(() => tester.pumpWidget(const SizedBox.shrink()));
-  return NativaApp(authRepository: testAuthRepository());
+  return NativaApp(
+      authRepository: testAuthRepository(),
+      deliveryRepository: DeliveryRepository(),
+      syncStore: MemorySyncStore());
 }

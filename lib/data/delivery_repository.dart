@@ -5,7 +5,12 @@ import '../domain/invoice_reference.dart';
 import '../domain/proportional_allocation.dart';
 
 class DeliveryRepository {
-  DeliveryRepository() {
+  DeliveryRepository({bool withExamples = true}) {
+    if (!withExamples) {
+      _nextDeliveryId = 1;
+      _nextBatchId = 1;
+      return;
+    }
     final today = DateTime.now();
     final octoberLikeDate = DateTime(today.year, today.month, 15);
     final previousMonthDate = DateTime(today.year, today.month - 1, 11);
@@ -86,6 +91,30 @@ class DeliveryRepository {
   int _nextDeliveryId = 6;
   int _nextBatchId = 3;
 
+  int allocateBatchId() => _nextBatchId++;
+  int allocateDeliveryId() => _nextDeliveryId++;
+
+  void restoreAll(List<Delivery> values) {
+    final ids = values.map((item) => item.id).toSet();
+    if (ids.length != values.length ||
+        values.any((item) => item.id <= 0 || item.batchId <= 0)) {
+      throw const FormatException('Identificadores locais repetidos.');
+    }
+    _deliveries
+      ..clear()
+      ..addAll(values);
+    _nextDeliveryId =
+        values.fold<int>(0, (max, item) => item.id > max ? item.id : max) + 1;
+    _nextBatchId = values.fold<int>(
+            0, (max, item) => item.batchId > max ? item.batchId : max) +
+        1;
+  }
+
+  void replaceBatch(int batchId, List<Delivery> values) {
+    _deliveries.removeWhere((item) => item.batchId == batchId);
+    _deliveries.insertAll(0, values);
+  }
+
   List<Delivery> getAll() => List.unmodifiable(_deliveries);
 
   List<String> get knownSchools => List.unmodifiable(schoolCatalog);
@@ -109,16 +138,18 @@ class DeliveryRepository {
     final schools =
         List<String>.unmodifiable(schoolCatalog.where(selected.contains));
     final batchName = name.trim();
-    if (batchName.isEmpty || items.isEmpty) {
+    if (batchName.isEmpty || batchName.length > 120 || items.isEmpty) {
       throw ArgumentError('Informe o nome do montante e ao menos um alimento.');
     }
     if (items.any((item) =>
         findFood(item.product) == null ||
         !item.availableKg.isFinite ||
         item.availableKg < 0.1 ||
+        item.availableKg > 1000000 ||
         ((item.availableKg * 10) - (item.availableKg * 10).round()).abs() >
             1e-7 ||
-        (item.unitPriceCents != null && item.unitPriceCents! < 0))) {
+        (item.unitPriceCents != null &&
+            (item.unitPriceCents! < 0 || item.unitPriceCents! > 1000000)))) {
       throw ArgumentError('Informe alimentos e quantidades válidos.');
     }
     if (items.map((item) => item.product).toSet().length != items.length) {

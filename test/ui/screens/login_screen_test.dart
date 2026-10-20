@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:nativa/data/auth_repository.dart';
+import 'package:nativa/data/sync_store.dart';
 import 'package:nativa/main.dart';
 
 import '../../support/test_app.dart';
@@ -38,7 +39,8 @@ void main() {
     final repository =
         AuthRepository(client: MockClient((_) => response.future));
     addTearDown(() => tester.pumpWidget(const SizedBox.shrink()));
-    await tester.pumpWidget(NativaApp(authRepository: repository));
+    await tester.pumpWidget(
+        NativaApp(authRepository: repository, syncStore: MemorySyncStore()));
     await tester.enterText(find.byType(TextFormField).at(0), '00000000000');
     await tester.enterText(find.byType(TextFormField).at(1), 'incorreta');
     await tester.tap(find.text('Entrar'));
@@ -65,6 +67,12 @@ void main() {
     await tester.tap(find.text('Perfil').last);
     await tester.pumpAndSettle();
     expect(find.text('Versão 9.8.7 (42)'), findsOneWidget);
+    await tester.scrollUntilVisible(find.text('Sair'), 250,
+        scrollable: find
+            .byWidgetPredicate((widget) =>
+                widget is Scrollable &&
+                widget.axisDirection == AxisDirection.down)
+            .first);
     await tester.ensureVisible(find.text('Sair'));
     await tester.tap(find.text('Sair'));
     await tester.pumpAndSettle();

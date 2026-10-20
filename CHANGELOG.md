@@ -1,5 +1,13 @@
 # Histórico de versões
 
+## 1.1.0+9 — 20/10/2026
+
+- Sincronização manual pelo Perfil: envio dos montantes e rateios e consulta aos dados compartilhados do MongoDB.
+- Cache local de rascunhos e revisões, sem credenciais; aplicativo real inicia sem montantes fictícios.
+- Revisão de conflitos entre aparelhos, gravação atômica por montante e reenvio idempotente após perda de resposta.
+- CORS permite PUT nas origens Web autorizadas.
+- Testes de sincronização, interface e fluxo com dois clientes Flutter via HTTP e MongoDB temporário.
+
 ## 1.1.0+8 — 20/10/2026
 
 - Dez EMEFs públicas de Cariacica–ES adicionadas aos catálogos Flutter e backend, com nomes e bairros conferidos na lista da Prefeitura.

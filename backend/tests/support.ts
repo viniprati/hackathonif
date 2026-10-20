@@ -6,6 +6,11 @@ export class MemoryRepository implements BatchRepository {
   async insert(batch: Batch) {
     this.batches.set(batch.id, structuredClone(batch));
   }
+  async insertIfAbsent(batch: Batch) {
+    if (this.batches.has(batch.id)) return false;
+    this.batches.set(batch.id, structuredClone(batch));
+    return true;
+  }
   async get(id: string) {
     return structuredClone(this.batches.get(id) ?? null);
   }
