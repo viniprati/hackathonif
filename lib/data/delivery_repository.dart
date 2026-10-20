@@ -22,6 +22,7 @@ class DeliveryRepository {
           for (final school in schools)
             SchoolRequest(school: school, requestedKg: 0)
         ],
+        participatingSchools: schools,
       ),
       _seed(
         2,
@@ -34,6 +35,7 @@ class DeliveryRepository {
           for (final school in schools)
             SchoolRequest(school: school, requestedKg: 0)
         ],
+        participatingSchools: schools,
       ),
       _seed(
         3,
@@ -46,6 +48,7 @@ class DeliveryRepository {
           for (final school in schools)
             SchoolRequest(school: school, requestedKg: 0)
         ],
+        participatingSchools: schools,
       ),
       _seed(
         4,
@@ -60,6 +63,7 @@ class DeliveryRepository {
           SchoolRequest(school: 'Darllin', requestedKg: 20),
         ],
         status: DeliveryStatus.completed,
+        participatingSchools: schools,
       ),
       _seed(
         5,
@@ -73,6 +77,7 @@ class DeliveryRepository {
           SchoolRequest(school: 'Pinto Coelho', requestedKg: 25),
         ],
         status: DeliveryStatus.completed,
+        participatingSchools: schools,
       ),
     ]);
   }

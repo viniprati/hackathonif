@@ -2,7 +2,7 @@
 
 Protótipo Flutter para organizar montantes de alimentos e calcular sua distribuição entre escolas, com foco inicial na associação **Aprovista**.
 
-Versão: **1.1.0+7**, conforme o [pubspec.yaml](pubspec.yaml). O histórico de mudanças está no [CHANGELOG.md](CHANGELOG.md).
+Versão: **1.1.0+8**, conforme o [pubspec.yaml](pubspec.yaml). O histórico de mudanças está no [CHANGELOG.md](CHANGELOG.md).
 
 ## Problema, público-alvo e solução
 
@@ -207,7 +207,7 @@ Nesta revisão, a análise estática terminou sem ocorrências, os testes Flutte
 - O login usa a conta única de demonstração do backend. O perfil e os dados iniciais são exemplos; não há gestão de usuários, permissões por função ou recuperação automática de senha.
 - O recorte implementado é a Aprovista; não há seleção nem isolamento de dados entre associações.
 - O PDF é um relatório gerencial de alimentos e valores, não uma nota fiscal. Não há emissão fiscal, importação automática de novas notas, envio de fotos ou comprovantes assinados.
-- O catálogo de alimentos foi definido a partir das notas fornecidas. As três escolas ainda são as do protótipo e precisam ser substituídas pelo cadastro oficial.
+- O catálogo de alimentos foi definido a partir das notas fornecidas. O catálogo de escolas contém três entradas originais do protótipo e dez EMEFs públicas de Cariacica–ES, confirmadas na lista municipal. A participação dessas escolas na associação ainda precisa de validação operacional. Veja a [lista e fonte](docs/ESCOLAS.md).
 - Os valores representam alimentos recebidos e sua destinação; não são receitas, pagamentos, lucro ou saldo bancário. Lotes sem preço são destacados e não integram o subtotal financeiro.
 - Os filtros usam a data do montante para a operação e a data de emissão para as notas. A taxa de perdas corresponde a kg perdidos divididos pelos kg recebidos no período, incluindo o estoque que ainda aguarda rateio.
 - O status finalizado indica rateio salvo. Não existe confirmação de recebimento pelas escolas nem rastreamento de entregas.
@@ -231,4 +231,4 @@ O fluxo definido para o projeto usa `develop` como integração e base para `fea
 
 A versão segue `MAJOR.MINOR.PATCH+BUILD` no [pubspec.yaml](pubspec.yaml): `MINOR` para novas funcionalidades, `PATCH` para correções e `MAJOR` para mudanças incompatíveis após a versão estável 1.0.0. Durante a fase `0.x`, novas versões menores também podem conter mudanças incompatíveis. O número `BUILD` cresce a cada versão distribuída nas lojas.
 
-Atualize o [CHANGELOG.md](CHANGELOG.md) ao preparar uma versão. Antes de integrar uma release na `main`, valide o aplicativo e execute os testes e a análise estática. As releases usam tags anotadas no formato `vMAJOR.MINOR.PATCH`. A versão atual está registrada no changelog; o sufixo `+7` identifica o build Android 7.
+Atualize o [CHANGELOG.md](CHANGELOG.md) ao preparar uma versão. Antes de integrar uma release na `main`, valide o aplicativo e execute os testes e a análise estática. As releases usam tags anotadas no formato `vMAJOR.MINOR.PATCH`. A versão atual está registrada no changelog; o sufixo `+8` identifica o build Android 8.

@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { buildApp } from '../src/app.js';
+import { schools } from '../src/domain/catalog.js';
 import { MemoryRepository, input, credentials } from './support.js';
 
 async function authorize(app: Awaited<ReturnType<typeof buildApp>>) {
@@ -152,4 +153,32 @@ test('readiness retorna 503 quando o MongoDB não está disponível', async (t) 
   const response = await app.inject('/health/ready');
   assert.equal(response.statusCode, 503);
   assert.ok(!response.body.includes('secret-uri'));
+});
+
+test('API lista 13 escolas e aceita uma nova EMEF no cadastro e rateio', async (t) => {
+  const app = await buildApp({ repository: new MemoryRepository(), ...credentials, logger: false });
+  t.after(() => app.close());
+  const headers = await authorize(app);
+  const catalog = await app.inject({ url: '/v1/catalog/schools', headers });
+  assert.equal(catalog.statusCode, 200);
+  assert.deepEqual(catalog.json().schools, [...schools]);
+  assert.equal(catalog.json().schools.length, 13);
+  const school = schools[schools.length - 1]!;
+  const created = await app.inject({
+    method: 'POST',
+    url: '/v1/batches',
+    headers,
+    payload: { ...input, participatingSchools: [school] },
+  });
+  assert.equal(created.statusCode, 201);
+  const batch = created.json();
+  const saved = await app.inject({
+    method: 'PUT',
+    url: `/v1/batches/${batch.id}/items/${batch.items[0].id}/allocation`,
+    headers,
+    payload: { revision: 0, requests: [{ school, requestedKg: 100 }] },
+  });
+  assert.equal(saved.statusCode, 200);
+  assert.deepEqual(saved.json().participatingSchools, [school]);
+  assert.equal(saved.json().items[0].distributedKg, 100);
 });

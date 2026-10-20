@@ -131,6 +131,70 @@ void main() {
     });
   }
 
+  testWidgets(
+      'nova escola de Cariacica pode participar e receber rateio com fonte ampliada',
+      (tester) async {
+    const school = 'EMEF Arthur da Costa e Silva';
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final model = DeliveryViewModel(DeliveryRepository());
+    addTearDown(model.dispose);
+    await tester.pumpWidget(MaterialApp(
+        theme: nativaTheme(),
+        builder: (context, child) => MediaQuery(
+            data: MediaQuery.of(context)
+                .copyWith(textScaler: const TextScaler.linear(2)),
+            child: child!),
+        home: Builder(
+            builder: (context) => Scaffold(
+                body: FilledButton(
+                    onPressed: () => showDialog<void>(
+                        context: context,
+                        builder: (_) => NewBatchDialog(viewModel: model)),
+                    child: const Text('Abrir cadastro'))))));
+    await tester.tap(find.text('Abrir cadastro'));
+    await tester.pumpAndSettle();
+    expect(find.byType(CheckboxListTile), findsNWidgets(13));
+    await tester.enterText(
+        find.widgetWithText(TextFormField, 'Nome do montante'), 'Cariacica');
+    await showTarget(
+        tester, find.byKey(const ValueKey('batch-school-$school')));
+    await tester.tap(find.byKey(const ValueKey('batch-school-$school')));
+    final food =
+        find.widgetWithText(DropdownButtonFormField<String>, 'Alimento 1');
+    await showTarget(tester, food);
+    await tester.tap(food);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Aipim').last);
+    await tester.pumpAndSettle();
+    await tester.enterText(find.widgetWithText(TextFormField, 'Kg'), '20');
+    await showTarget(tester, find.text('Salvar montante'));
+    await tester.tap(find.text('Salvar montante'));
+    await tester.pumpAndSettle();
+    final delivery =
+        model.deliveries.firstWhere((item) => item.batchName == 'Cariacica');
+    expect(delivery.participatingSchools, [school]);
+    Navigator.of(tester.element(find.text('Abrir cadastro'))).push(
+        MaterialPageRoute<void>(
+            builder: (_) =>
+                AllocationScreen(viewModel: model, deliveryId: delivery.id)));
+    await tester.pumpAndSettle();
+    await showTarget(tester, find.byKey(const Key('school-quantity-$school')));
+    expect(find.byType(TextFormField), findsOneWidget);
+    expect(find.text(school), findsOneWidget);
+    expect(find.text('IFES'), findsNothing);
+    await tester.enterText(find.byType(TextFormField), '20');
+    await showTarget(tester, find.text('Salvar rateio'));
+    await tester.tap(find.text('Salvar rateio'));
+    await tester.pumpAndSettle();
+    final saved = model.deliveries.firstWhere((item) => item.id == delivery.id);
+    expect(saved.distributedKg, 20);
+    expect(saved.participatingSchools, [school]);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('card de escolas mostra apenas as participantes do montante',
       (tester) async {
     final model = DeliveryViewModel(DeliveryRepository());

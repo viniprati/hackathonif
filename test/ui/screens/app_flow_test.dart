@@ -161,6 +161,8 @@ void main() {
     await tester.enterText(
         find.widgetWithText(TextFormField, 'Nome do montante'),
         'Feira de outubro');
+    FocusManager.instance.primaryFocus?.unfocus();
+    await tester.pumpAndSettle();
     await tester.ensureVisible(find.text('Selecionar todas'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Selecionar todas'));

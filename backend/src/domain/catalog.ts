@@ -1,4 +1,19 @@
-export const schools = ['IFES', 'Pinto Coelho', 'Darllin'] as const;
+// Fonte das dez EMEFs de Cariacica–ES: docs/ESCOLAS.md na raiz do projeto.
+export const schools = [
+  'IFES',
+  'Pinto Coelho',
+  'Darllin',
+  'EMEF Agustinha Muniz de Oliveira',
+  'EMEF Alice Coutinho Santos',
+  'EMEF Almerinda Portela Colodette',
+  'EMEF Álvaro Armeloni',
+  'EMEF Amenóphis de Assis',
+  'EMEF Angelo Zani',
+  'EMEF Antário Alexandre Theodoro Filho',
+  'EMEF Antero José do Nascimento',
+  'EMEF Antonio Coutinho de Oliveira',
+  'EMEF Arthur da Costa e Silva',
+] as const;
 export const foods = [
   { name: 'Aipim', priceCents: 572, invoiceNumber: '190720001' },
   { name: 'Banana da terra', priceCents: 832, invoiceNumber: '260820001' },

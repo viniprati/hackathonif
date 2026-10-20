@@ -1,5 +1,11 @@
 # Histórico de versões
 
+## 1.1.0+8 — 20/10/2026
+
+- Dez EMEFs públicas de Cariacica–ES adicionadas aos catálogos Flutter e backend, com nomes e bairros conferidos na lista da Prefeitura.
+- As três entradas originais foram mantidas, totalizando 13 opções. Os montantes de exemplo mantêm suas escolas participantes.
+- Fonte e lista em [docs/ESCOLAS.md](docs/ESCOLAS.md).
+
 ## 1.1.0+7 — 19/10/2026
 
 - Cadastro de montantes sem seleção ou vínculo de nota fiscal. Preços por kg continuam editáveis e os alimentos disponíveis vêm do catálogo completo.

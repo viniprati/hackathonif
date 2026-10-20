@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { readFile } from 'node:fs/promises';
 import { createBatch, saveAllocation, units } from '../src/domain/batch.js';
-import { foods, invoices } from '../src/domain/catalog.js';
+import { foods, invoices, schools } from '../src/domain/catalog.js';
 import { reportWindow, stockReport } from '../src/domain/report.js';
 import { input } from './support.js';
 
@@ -167,4 +167,23 @@ test('semanas, ano bissexto e relatório vazio', () => {
   const empty = stockReport([], 'month', input.date);
   assert.equal(empty.totals.lossRate, 0);
   assert.deepEqual(empty.foods, []);
+});
+
+test('catálogos de escolas coincidem e novas escolas permitem cadastro e rateio', async () => {
+  const flutter = await readFile(new URL('../../lib/domain/catalog.dart', import.meta.url), 'utf8');
+  const declaration = flutter.match(/const schoolCatalog = \[([\s\S]*?)\];/)![1]!;
+  const names = [...declaration.matchAll(/'([^']+)'/g)].map((match) => match[1]);
+  assert.deepEqual([...schools], names);
+  assert.equal(schools.length, 13);
+  assert.equal(new Set(schools).size, 13);
+  for (const school of schools.slice(3)) {
+    const batch = createBatch({ ...input, participatingSchools: [school] });
+    const saved = saveAllocation(batch, batch.items[0]!.id, {
+      revision: 0,
+      requests: [{ school, requestedKg: 100 }],
+    });
+    assert.deepEqual(saved.participatingSchools, [school]);
+    assert.equal(saved.items[0]!.allocations[0]!.allocatedUnits, 1000);
+    assert.equal(saved.items[0]!.status, 'completed');
+  }
 });

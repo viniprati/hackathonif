@@ -60,7 +60,8 @@ void main() {
     expect(saved.distributedKg, 60);
     expect(saved.lossKg, 10);
     expect(saved.surplusKg, 30);
-    expect(saved.allocations.map((item) => item.school), schoolCatalog);
+    expect(saved.allocations.map((item) => item.school),
+        before.participatingSchools);
     expect(saved.allocations.last.requestedKg, 0);
     expect(saved.status, DeliveryStatus.completed);
   });
