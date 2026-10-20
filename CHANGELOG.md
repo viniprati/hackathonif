@@ -1,12 +1,17 @@
 # Histórico de versões
 
-## Backend — em desenvolvimento
+## 1.1.0+5 — 19/10/2026
 
 - API REST TypeScript com Fastify, login JWT de demonstração e persistência MongoDB.
 - Catálogos definidos, montantes com escolas participantes, distribuição com revisão e relatórios por alimento.
 - Validação dos pedidos, classificação de saldo, logs estruturados e rotas de saúde.
 - Testes HTTP e de regras, com integração em MongoDB local temporário.
 - Integração do Flutter com a API pendente; credenciais mantidas em arquivos locais ignorados pelo Git.
+
+- Validação da demonstração com 42 testes Flutter e 18 testes backend, builds Web/Android e verificações da API publicada. Evidências referentes ao código antes da atualização de versão estão em [docs/VALIDACAO_DEMONSTRACAO.md](docs/VALIDACAO_DEMONSTRACAO.md).
+- Teste HTTP de persistência após reiniciar API e conexão MongoDB; testes de integração executados sequencialmente.
+- Documentação da configuração de demonstração no Railway. Backend versionado como 1.1.0; Flutter como 1.1.0+5.
+- Esta versão mantém o Flutter com dados em memória, sem integração HTTP com a API.
 
 ## 1.0.4+4 — 19/10/2026
 
