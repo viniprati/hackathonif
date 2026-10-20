@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../../domain/batch_summary.dart';
@@ -265,90 +266,138 @@ class _CalendarCard extends StatelessWidget {
                 ),
               ],
             ),
-            Row(
-              children: [
-                for (final label in [
-                  'Seg',
-                  'Ter',
-                  'Qua',
-                  'Qui',
-                  'Sex',
-                  'Sáb',
-                  'Dom'
-                ])
-                  Expanded(
-                    child: Text(
-                      label,
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        fontSize: 11,
-                        color: NativaColors.gray,
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-            const SizedBox(height: 6),
-            GridView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: ((offset + days + 6) ~/ 7) * 7,
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 7,
-                mainAxisExtent: 27 + MediaQuery.textScalerOf(context).scale(16),
-              ),
-              itemBuilder: (context, index) {
-                final day = index - offset + 1;
-                if (day < 1 || day > days) return const SizedBox.shrink();
-                final date = DateTime(month.year, month.month, day);
-                final events = batches.where(
-                  (batch) => DateUtils.isSameDay(batch.date, date),
-                );
-                final isSelected = DateUtils.isSameDay(date, selectedDate);
-                final isToday = DateUtils.isSameDay(date, DateTime.now());
-                return Semantics(
-                  button: true,
-                  selected: isSelected,
-                  label: '$day de $title, ${events.length} montantes',
-                  child: InkWell(
-                    onTap: () => onSelect(date),
-                    borderRadius: BorderRadius.circular(12),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: isSelected
-                            ? NativaColors.yellow.withValues(alpha: 0.35)
-                            : null,
-                        border: isToday
-                            ? Border.all(color: NativaColors.earth)
-                            : null,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            '$day',
-                            style: TextStyle(
-                              fontWeight: isSelected || isToday
-                                  ? FontWeight.bold
-                                  : FontWeight.normal,
+            LayoutBuilder(
+                builder: (context, constraints) => SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: SizedBox(
+                        width: math.max(336, constraints.maxWidth),
+                        child: Column(children: [
+                          ExcludeSemantics(
+                              child: Row(
+                            children: [
+                              for (final label in [
+                                'Seg',
+                                'Ter',
+                                'Qua',
+                                'Qui',
+                                'Sex',
+                                'Sáb',
+                                'Dom'
+                              ])
+                                Expanded(
+                                  child: Text(
+                                    label,
+                                    textAlign: TextAlign.center,
+                                    style: const TextStyle(
+                                      fontSize: 11,
+                                      color: NativaColors.gray,
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          )),
+                          const SizedBox(height: 6),
+                          GridView.builder(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            itemCount: ((offset + days + 6) ~/ 7) * 7,
+                            gridDelegate:
+                                SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 7,
+                              mainAxisExtent: math.max(
+                                  48,
+                                  27 +
+                                      MediaQuery.textScalerOf(context)
+                                          .scale(16)),
                             ),
+                            itemBuilder: (context, index) {
+                              final day = index - offset + 1;
+                              if (day < 1 || day > days) {
+                                return const SizedBox.shrink();
+                              }
+                              final date =
+                                  DateTime(month.year, month.month, day);
+                              final events = batches.where(
+                                (batch) =>
+                                    DateUtils.isSameDay(batch.date, date),
+                              );
+                              final isSelected =
+                                  DateUtils.isSameDay(date, selectedDate);
+                              final isToday =
+                                  DateUtils.isSameDay(date, DateTime.now());
+                              return Semantics(
+                                button: true,
+                                enabled: true,
+                                excludeSemantics: true,
+                                onTap: () => onSelect(date),
+                                selected: isSelected,
+                                label:
+                                    '$day de $title de ${month.year}${isToday ? ', hoje' : ''}, ${events.length} montantes${events.isEmpty ? '' : events.every((batch) => batch.isCompleted) ? ', todos finalizados' : ', com alimentos pendentes'}',
+                                child: TextButton(
+                                  onPressed: () => onSelect(date),
+                                  style: TextButton.styleFrom(
+                                    padding: EdgeInsets.zero,
+                                    minimumSize: const Size(48, 48),
+                                    backgroundColor: isSelected
+                                        ? Theme.of(context)
+                                            .colorScheme
+                                            .primaryContainer
+                                        : Colors.transparent,
+                                    foregroundColor: isSelected
+                                        ? Theme.of(context)
+                                            .colorScheme
+                                            .onPrimaryContainer
+                                        : Colors.black,
+                                    shape: RoundedRectangleBorder(
+                                        borderRadius:
+                                            BorderRadius.circular(12)),
+                                  ).copyWith(
+                                      side: WidgetStateProperty.resolveWith(
+                                          (states) => states
+                                                  .contains(WidgetState.focused)
+                                              ? const BorderSide(
+                                                  color: Color(0xFF005BBB),
+                                                  width: 3)
+                                              : isToday || isSelected
+                                                  ? BorderSide(
+                                                      color: Theme.of(context)
+                                                          .colorScheme
+                                                          .outline,
+                                                      width: 2)
+                                                  : BorderSide.none)),
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Text(
+                                        '$day',
+                                        style: TextStyle(
+                                          fontWeight: isSelected || isToday
+                                              ? FontWeight.bold
+                                              : FontWeight.normal,
+                                        ),
+                                      ),
+                                      if (events.isNotEmpty)
+                                        Icon(
+                                          events.every(
+                                                  (batch) => batch.isCompleted)
+                                              ? Icons.check
+                                              : Icons.schedule,
+                                          size: 12,
+                                          color: isSelected
+                                              ? Theme.of(context)
+                                                  .colorScheme
+                                                  .onPrimaryContainer
+                                              : Theme.of(context)
+                                                  .colorScheme
+                                                  .onSurface,
+                                        ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
                           ),
-                          if (events.isNotEmpty)
-                            Icon(
-                              Icons.circle,
-                              size: 7,
-                              color: events.every((batch) => batch.isCompleted)
-                                  ? NativaColors.green
-                                  : NativaColors.yellow,
-                            ),
-                        ],
-                      ),
-                    ),
-                  ),
-                );
-              },
-            ),
+                        ])))),
           ],
         ),
       ),

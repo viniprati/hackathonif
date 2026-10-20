@@ -65,6 +65,7 @@ void main() {
         '12345678901',
       );
       await tester.ensureVisible(find.text('Entrar'));
+      await tester.ensureVisible(find.text('Entrar'));
       await tester.tap(find.text('Entrar'));
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);

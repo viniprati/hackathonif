@@ -53,18 +53,28 @@ void main() {
       expect(find.text('Sem nota vinculada'), findsNothing);
       expect(find.byType(DropdownButtonFormField<String>), findsOneWidget);
       await tester.enterText(
-          find.widgetWithText(TextFormField, 'Nome do montante'),
+          find.widgetWithText(TextFormField, 'Nome do montante (obrigatório)'),
           'Montante selecionado');
       final food = find.byWidgetPredicate((widget) =>
           widget is DropdownButtonFormField<String> &&
-          widget.decoration.labelText == 'Alimento 1');
+          widget.decoration.labelText == 'Alimento 1 (obrigatório)');
       await showTarget(tester, food);
       await tester.tap(food);
       await tester.pumpAndSettle();
       await tester.tap(find.text('Aipim').last);
       await tester.pumpAndSettle();
-      await tester.enterText(find.widgetWithText(TextFormField, 'Kg'), '10');
-      final price = find.widgetWithText(TextFormField, r'R$ / kg');
+      await tester.enterText(
+          find.ancestor(
+              of: find.byWidgetPredicate((w) =>
+                  w is TextField &&
+                  w.decoration?.labelText?.startsWith('Quantidade ') == true),
+              matching: find.byType(TextFormField)),
+          '10');
+      final price = find.ancestor(
+          of: find.byWidgetPredicate((w) =>
+              w is TextField &&
+              w.decoration?.labelText?.startsWith('Preço de ') == true),
+          matching: find.byType(TextFormField));
       await showTarget(tester, price);
       expect(
           tester
@@ -76,7 +86,9 @@ void main() {
       await showTarget(tester, find.text('Salvar montante'));
       await tester.tap(find.text('Salvar montante'));
       await tester.pumpAndSettle();
-      expect(find.text('Selecione pelo menos uma escola participante.'),
+      expect(
+          find.text(
+              'Selecione pelo menos uma escola que participará deste montante.'),
           findsOneWidget);
       expect(model.batches.any((batch) => batch.name == 'Montante selecionado'),
           isFalse);
@@ -84,7 +96,9 @@ void main() {
       await showTarget(tester, school);
       await tester.tap(school);
       await tester.pumpAndSettle();
-      expect(find.text('Selecione pelo menos uma escola participante.'),
+      expect(
+          find.text(
+              'Selecione pelo menos uma escola que participará deste montante.'),
           findsNothing);
       await showTarget(tester, find.text('Salvar montante'));
       await tester.tap(find.text('Salvar montante'));
@@ -158,18 +172,25 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(CheckboxListTile), findsNWidgets(13));
     await tester.enterText(
-        find.widgetWithText(TextFormField, 'Nome do montante'), 'Cariacica');
+        find.widgetWithText(TextFormField, 'Nome do montante (obrigatório)'),
+        'Cariacica');
     await showTarget(
         tester, find.byKey(const ValueKey('batch-school-$school')));
     await tester.tap(find.byKey(const ValueKey('batch-school-$school')));
-    final food =
-        find.widgetWithText(DropdownButtonFormField<String>, 'Alimento 1');
+    final food = find.widgetWithText(
+        DropdownButtonFormField<String>, 'Alimento 1 (obrigatório)');
     await showTarget(tester, food);
     await tester.tap(food);
     await tester.pumpAndSettle();
     await tester.tap(find.text('Aipim').last);
     await tester.pumpAndSettle();
-    await tester.enterText(find.widgetWithText(TextFormField, 'Kg'), '20');
+    await tester.enterText(
+        find.ancestor(
+            of: find.byWidgetPredicate((w) =>
+                w is TextField &&
+                w.decoration?.labelText?.startsWith('Quantidade ') == true),
+            matching: find.byType(TextFormField)),
+        '20');
     await showTarget(tester, find.text('Salvar montante'));
     await tester.tap(find.text('Salvar montante'));
     await tester.pumpAndSettle();

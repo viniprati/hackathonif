@@ -31,5 +31,6 @@ NativaApp testApp(WidgetTester tester) {
   return NativaApp(
       authRepository: testAuthRepository(),
       deliveryRepository: DeliveryRepository(),
-      syncStore: MemorySyncStore());
+      syncStore: MemorySyncStore(),
+      accessibilityStore: MemorySyncStore());
 }

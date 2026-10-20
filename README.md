@@ -2,7 +2,7 @@
 
 Protótipo Flutter para organizar montantes de alimentos e calcular sua distribuição entre escolas, com foco inicial na associação **Aprovista**.
 
-Versão: **1.2.1+11**, conforme o [pubspec.yaml](pubspec.yaml). O histórico de mudanças está no [CHANGELOG.md](CHANGELOG.md).
+Versão: **1.3.0+12**, conforme o [pubspec.yaml](pubspec.yaml). O histórico de mudanças está no [CHANGELOG.md](CHANGELOG.md).
 
 ## Problema, público-alvo e solução
 
@@ -28,6 +28,7 @@ A cópia de trabalho local é restaurada ao reabrir o app, após o login. Se dua
 - **Notas de referência:** itens, preços e totais transcritos de duas DANFEs fornecidas, separados dos totais dos montantes para evitar dupla contagem.
 - **Perfil:** dados fixos de demonstração, saída e sincronização manual com indicador de pendências, última atualização e revisão de conflitos. Montantes sincronizados alimentam também Produtos, gráficos e PDFs locais.
 - **Interface em português do Brasil:** navegação inferior em telas menores e lateral em telas maiores.
+- **Acessibilidade:** alto contraste salvo no aparelho, rótulos acessíveis, orientação e foco nos erros, confirmação de substituições e desfazer no rascunho. Disponível na barra superior e no Perfil; veja os recursos, limites e roteiro de teste em [Acessibilidade](docs/ACESSIBILIDADE.md).
 - **Tamanho das letras:** controles no topo, disponíveis desde o login, para aumentar em etapas de 20% até 200%, diminuir ou restaurar o tamanho do aparelho. O ajuste vale também para detalhes e pop-ups, respeita a configuração de fonte do sistema e permanece durante a sessão. Recarregar a página ou reiniciar o app restaura o padrão do aparelho.
 
 Um **montante** reúne vários alimentos. Cada alimento é registrado como um **lote** com seus pedidos e quantidades rateadas. Salvar o rateio finaliza esse alimento; o montante fica finalizado quando todos os seus alimentos estão finalizados. Esse status representa o registro do rateio, sem comprovar uma entrega física.

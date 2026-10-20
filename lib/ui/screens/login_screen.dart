@@ -25,6 +25,12 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
+  void _submit() {
+    if (widget.viewModel.busy || !validateAccessibleForm(_formKey)) return;
+    FocusScope.of(context).unfocus();
+    widget.viewModel.signIn(_cpf.text, _password.text);
+  }
+
   @override
   Widget build(BuildContext context) => ListenableBuilder(
         listenable: widget.viewModel,
@@ -37,7 +43,9 @@ class _LoginScreenState extends State<LoginScreen> {
                   padding: const EdgeInsets.all(24),
                   child: Form(
                     key: _formKey,
-                    child: Column(
+                    child: AutofillGroup(
+                        child: FocusTraversalGroup(
+                            child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         const SizedBox(height: 28),
@@ -56,33 +64,40 @@ class _LoginScreenState extends State<LoginScreen> {
                           style: TextStyle(color: NativaColors.gray),
                         ),
                         const SizedBox(height: 32),
-                        const Text('CPF'),
-                        const SizedBox(height: 6),
                         TextFormField(
                           controller: _cpf,
                           enabled: !widget.viewModel.busy,
                           keyboardType: TextInputType.number,
+                          autofillHints: const [AutofillHints.username],
+                          textInputAction: TextInputAction.next,
                           inputFormatters: [
                             FilteringTextInputFormatter.digitsOnly,
                             LengthLimitingTextInputFormatter(11),
                           ],
                           decoration: const InputDecoration(
                             prefixIcon: Icon(Icons.badge_outlined),
+                            labelText: 'CPF (obrigatório)',
                             hintText: '00000000000',
+                            helperText:
+                                'Digite os 11 números, sem pontos ou traços.',
                           ),
                           validator: (value) => value?.length == 11
                               ? null
                               : 'Informe 11 dígitos.',
                         ),
                         const SizedBox(height: 16),
-                        const Text('Senha'),
-                        const SizedBox(height: 6),
                         TextFormField(
                           controller: _password,
                           enabled: !widget.viewModel.busy,
                           obscureText: _hidePassword,
+                          autofillHints: const [AutofillHints.password],
+                          enableSuggestions: false,
+                          autocorrect: false,
+                          textInputAction: TextInputAction.done,
+                          onFieldSubmitted: (_) => _submit(),
                           decoration: InputDecoration(
                             prefixIcon: const Icon(Icons.lock_outline),
+                            labelText: 'Senha (obrigatório)',
                             hintText: 'Sua senha',
                             suffixIcon: IconButton(
                               tooltip: _hidePassword
@@ -103,26 +118,9 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                         const SizedBox(height: 16),
                         if (widget.viewModel.error != null)
-                          Padding(
-                            padding: const EdgeInsets.only(bottom: 12),
-                            child: Semantics(
-                              liveRegion: true,
-                              child: Text(widget.viewModel.error!,
-                                  style: TextStyle(
-                                      color:
-                                          Theme.of(context).colorScheme.error)),
-                            ),
-                          ),
+                          GuidanceMessage(widget.viewModel.error!),
                         FilledButton(
-                          onPressed: widget.viewModel.busy
-                              ? null
-                              : () {
-                                  if (_formKey.currentState!.validate()) {
-                                    FocusScope.of(context).unfocus();
-                                    widget.viewModel
-                                        .signIn(_cpf.text, _password.text);
-                                  }
-                                },
+                          onPressed: widget.viewModel.busy ? null : _submit,
                           child: Text(
                               widget.viewModel.busy ? 'Entrando…' : 'Entrar'),
                         ),
@@ -165,7 +163,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         ),
                       ],
-                    ),
+                    ))),
                   ),
                 ),
               ),

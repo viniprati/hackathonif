@@ -44,7 +44,7 @@ class DeliveryDetails extends StatelessWidget {
                 child: ListView(
                   padding: const EdgeInsets.all(20),
                   children: [
-                    Text(
+                    AccessibleHeading(
                       delivery.product,
                       style: const TextStyle(
                         fontSize: 27,
@@ -107,12 +107,16 @@ class DeliveryDetails extends StatelessWidget {
                             color: NativaColors.green,
                           ),
                           title: Text(allocation.school),
-                          subtitle: Text(
-                            'Pedido: ${formatKg(allocation.requestedKg)}',
-                          ),
-                          trailing: Text(
-                            formatKg(allocation.allocatedKg),
-                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                  'Pedido: ${formatKg(allocation.requestedKg)}'),
+                              Text(
+                                  'Distribuído: ${formatKg(allocation.allocatedKg)}',
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.bold)),
+                            ],
                           ),
                         ),
                       ),

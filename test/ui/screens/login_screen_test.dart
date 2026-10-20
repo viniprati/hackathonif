@@ -30,12 +30,14 @@ void main() {
   testWidgets('exige CPF e senha e só entra após autenticação', (tester) async {
     phoneSize(tester);
     await tester.pumpWidget(testApp(tester));
+    await tester.ensureVisible(find.text('Entrar'));
     await tester.tap(find.text('Entrar'));
     await tester.pump();
     expect(find.text('Informe 11 dígitos.'), findsOneWidget);
     expect(find.text('Cadastrar montante'), findsNothing);
     await tester.enterText(find.byType(TextFormField).at(0), '00000000000');
     await tester.enterText(find.byType(TextFormField).at(1), 'somente-teste');
+    await tester.ensureVisible(find.text('Entrar'));
     await tester.tap(find.text('Entrar'));
     await tester.pumpAndSettle();
     expect(find.text('Cadastrar montante'), findsOneWidget);
@@ -48,10 +50,13 @@ void main() {
     final repository =
         AuthRepository(client: MockClient((_) => response.future));
     addTearDown(() => tester.pumpWidget(const SizedBox.shrink()));
-    await tester.pumpWidget(
-        NativaApp(authRepository: repository, syncStore: MemorySyncStore()));
+    await tester.pumpWidget(NativaApp(
+        authRepository: repository,
+        syncStore: MemorySyncStore(),
+        accessibilityStore: MemorySyncStore()));
     await tester.enterText(find.byType(TextFormField).at(0), '00000000000');
     await tester.enterText(find.byType(TextFormField).at(1), 'incorreta');
+    await tester.ensureVisible(find.text('Entrar'));
     await tester.tap(find.text('Entrar'));
     await tester.pump();
     expect(find.text('Entrando…'), findsOneWidget);
@@ -60,7 +65,10 @@ void main() {
     expect(find.text('Cadastrar montante'), findsNothing);
     response.complete(http.Response('{}', 401));
     await tester.pumpAndSettle();
-    expect(find.text('CPF ou senha inválidos.'), findsOneWidget);
+    expect(
+        find.text(
+            'CPF ou senha inválidos. Confira os 11 números e a senha e tente novamente.'),
+        findsOneWidget);
     expect(find.text('Entrar'), findsOneWidget);
     expect(find.text('Cadastrar montante'), findsNothing);
   });
@@ -72,13 +80,18 @@ void main() {
       ..value = '{"schema":1,"lastSyncedAt":null,"batches":[]}';
     final original = store.value;
     addTearDown(() => tester.pumpWidget(const SizedBox.shrink()));
-    await tester.pumpWidget(
-        NativaApp(authRepository: testAuthRepository(), syncStore: store));
+    await tester.pumpWidget(NativaApp(
+        authRepository: testAuthRepository(),
+        syncStore: store,
+        accessibilityStore: MemorySyncStore()));
     await tester.enterText(find.byType(TextFormField).at(0), '00000000000');
     await tester.enterText(find.byType(TextFormField).at(1), 'somente-teste');
+    await tester.ensureVisible(find.text('Entrar'));
     await tester.tap(find.text('Entrar'));
     await tester.pumpAndSettle();
-    expect(find.text('Código de suporte: CACHE_READ_FAILED'), findsOneWidget);
+    expect(find.textContaining('Tente novamente. Se o problema continuar'),
+        findsOneWidget);
+    expect(find.textContaining('CACHE_READ_FAILED'), findsNothing);
     expect(store.value, original);
     expect(find.text('Cadastrar montante'), findsNothing);
     store.unavailable = false;
@@ -94,6 +107,7 @@ void main() {
     await tester.pumpWidget(testApp(tester));
     await tester.enterText(find.byType(TextFormField).at(0), '00000000000');
     await tester.enterText(find.byType(TextFormField).at(1), 'somente-teste');
+    await tester.ensureVisible(find.text('Entrar'));
     await tester.tap(find.text('Entrar'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Perfil').last);

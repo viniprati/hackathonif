@@ -1,4 +1,6 @@
 import 'dart:convert';
+import 'dart:async';
+import 'package:http/http.dart' as http;
 
 import '../domain/sync_batch.dart';
 import 'auth_repository.dart';
@@ -21,7 +23,16 @@ class BatchApi implements BatchGateway {
 
   Future<Map<String, dynamic>> _request(String method, String path,
       {Object? body}) async {
-    final response = await _auth.authenticatedRequest(method, path, body: body);
+    final http.Response response;
+    try {
+      response = await _auth.authenticatedRequest(method, path, body: body);
+    } on TimeoutException {
+      throw const SyncFailure(
+          'A conexão demorou para responder. Confira sua internet e toque em Sincronizar dados novamente. As alterações locais foram mantidas.');
+    } on http.ClientException {
+      throw const SyncFailure(
+          'Não conseguimos conectar ao serviço. Confira sua internet e toque em Sincronizar dados novamente. As alterações locais foram mantidas.');
+    }
     if (response.statusCode == 401) {
       throw const SyncFailure('Sua sessão expirou. Entre novamente.',
           status: 401);
@@ -44,7 +55,7 @@ class BatchApi implements BatchGateway {
       throw SyncFailure(
           response.statusCode == 400 || response.statusCode == 422
               ? 'O banco recusou os dados. Revise alimentos, escolas, quantidades e perdas.'
-              : 'Não foi possível sincronizar agora. Tente novamente.',
+              : 'O serviço está temporariamente indisponível. Aguarde alguns minutos e sincronize novamente. As alterações locais foram mantidas.',
           status: response.statusCode);
     }
     return jsonDecode(response.body) as Map<String, dynamic>;

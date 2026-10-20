@@ -53,7 +53,8 @@ class AuthRepository {
           )
           .timeout(const Duration(seconds: 20));
       if (response.statusCode == 401) {
-        throw const AuthFailure('CPF ou senha inválidos.');
+        throw const AuthFailure(
+            'CPF ou senha inválidos. Confira os 11 números e a senha e tente novamente.');
       }
       if (response.statusCode == 429) {
         throw const AuthFailure(
@@ -61,7 +62,7 @@ class AuthRepository {
       }
       if (response.statusCode != 200) {
         throw const AuthFailure(
-            'O serviço de acesso está indisponível. Tente novamente.');
+            'O serviço de entrada está temporariamente indisponível. Aguarde alguns minutos e tente novamente.');
       }
       final decoded = jsonDecode(response.body);
       if (decoded is! Map<String, dynamic> ||
@@ -71,7 +72,7 @@ class AuthRepository {
           decoded['expiresIn'] is! int ||
           (decoded['expiresIn'] as int) <= 0) {
         throw const AuthFailure(
-            'Não foi possível confirmar o acesso. Tente novamente.');
+            'O serviço não confirmou a entrada. Tente novamente; se continuar, peça ajuda à equipe.');
       }
       _accessToken = decoded['accessToken'] as String;
       _expiresAt =
@@ -86,7 +87,7 @@ class AuthRepository {
           'Não foi possível conectar. Confira sua internet e tente novamente.');
     } on FormatException {
       throw const AuthFailure(
-          'Não foi possível confirmar o acesso. Tente novamente.');
+          'O serviço não confirmou a entrada. Tente novamente; se continuar, peça ajuda à equipe.');
     }
   }
 

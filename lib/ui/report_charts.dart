@@ -11,11 +11,28 @@ class ReportCharts extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final contrast = highContrastOf(context);
     final portions = [
-      ('Distribuído', report.distributedKg, NativaColors.green),
-      ('Sobra aproveitável', report.surplusKg, const Color(0xFF327E93)),
-      ('Perda', report.lossKg, NativaColors.terracotta),
-      ('Aguardando rateio', report.pendingKg, NativaColors.yellow),
+      (
+        'Distribuído',
+        report.distributedKg,
+        contrast ? const Color(0xFF164327) : NativaColors.green
+      ),
+      (
+        'Sobra aproveitável',
+        report.surplusKg,
+        contrast ? const Color(0xFF00475C) : const Color(0xFF327E93)
+      ),
+      (
+        'Perda',
+        report.lossKg,
+        contrast ? const Color(0xFF592511) : NativaColors.terracotta
+      ),
+      (
+        'Aguardando rateio',
+        report.pendingKg,
+        contrast ? const Color(0xFF5A4100) : NativaColors.yellow
+      ),
       ('Sem classificação', report.unclassifiedKg, NativaColors.gray),
     ];
     final products = [
@@ -93,7 +110,8 @@ class ReportCharts extends StatelessWidget {
               : Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                   const Text(
                       'Colunas em kg, com a mesma escala para todos os alimentos. Deslize para ver os demais.'),
-                  const Text('Verde escuro: recebido • Azul: distribuído'),
+                  const Text(
+                      'Cada coluna identifica a quantidade recebida ou distribuída.'),
                   const SizedBox(height: 16),
                   SingleChildScrollView(
                       scrollDirection: Axis.horizontal,
@@ -121,6 +139,7 @@ class ReportCharts extends StatelessWidget {
                                             children: [
                                               Expanded(
                                                   child: _ColumnBar(
+                                                      label: 'Recebido',
                                                       value: product.$2,
                                                       maximum: maximum,
                                                       color:
@@ -128,6 +147,7 @@ class ReportCharts extends StatelessWidget {
                                               const SizedBox(width: 6),
                                               Expanded(
                                                   child: _ColumnBar(
+                                                      label: 'Distribuído',
                                                       value: product.$3,
                                                       maximum: maximum,
                                                       color: const Color(
@@ -180,12 +200,17 @@ class ReportCharts extends StatelessWidget {
 
 class _ColumnBar extends StatelessWidget {
   const _ColumnBar(
-      {required this.value, required this.maximum, required this.color});
+      {required this.label,
+      required this.value,
+      required this.maximum,
+      required this.color});
+  final String label;
   final double value;
   final double maximum;
   final Color color;
   @override
   Widget build(BuildContext context) => Column(children: [
+        Text(label, textAlign: TextAlign.center),
         Text(formatKg(value),
             textAlign: TextAlign.center, style: const TextStyle(fontSize: 12)),
         const SizedBox(height: 4),
@@ -233,6 +258,15 @@ class _PiePainter extends CustomPainter {
       if (sweep > 0) {
         canvas.drawArc(
             bounds.deflate(4), start, sweep, true, Paint()..color = portion.$2);
+        canvas.drawArc(
+            bounds.deflate(4),
+            start,
+            sweep,
+            true,
+            Paint()
+              ..color = Colors.white
+              ..style = PaintingStyle.stroke
+              ..strokeWidth = 2);
       }
       start += sweep;
     }

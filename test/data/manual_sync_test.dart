@@ -39,7 +39,47 @@ void allocate(DeliveryViewModel model, double kg, double loss) =>
         [SchoolRequest(school: 'IFES', requestedKg: kg)],
         remainderConfirmed: true, lossKg: loss);
 
+class SwitchableStore extends MemorySyncStore {
+  bool fail = false;
+  @override
+  Future<void> write(String value) async {
+    if (fail) throw StateError('sem espaço');
+    await super.write(value);
+  }
+}
+
 void main() {
+  test('falha ao gravar versão do banco mantém edição local e permite repetir',
+      () async {
+    final api = FakeBatchApi();
+    final cache = SwitchableStore();
+    final a = device(api, MemorySyncStore());
+    final b = device(api, cache);
+    addTearDown(a.dispose);
+    addTearDown(b.dispose);
+    create(a);
+    await a.sync!.synchronize();
+    await b.sync!.synchronize();
+    allocate(a, 70, 10);
+    allocate(b, 50, 5);
+    await a.sync!.synchronize();
+    await b.sync!.synchronize();
+    final previous = cache.value;
+    cache.fail = true;
+    await b.sync!.useServerVersion(b.deliveries.single.batchId);
+    expect(b.deliveries.single.distributedKg, 50);
+    expect(b.sync!.conflicts, hasLength(1));
+    expect(cache.value, previous);
+    expect(b.sync!.message, contains('Sua edição local foi mantida'));
+    cache.fail = false;
+    await b.sync!.useServerVersion(b.deliveries.single.batchId);
+    expect(b.deliveries.single.distributedKg, 70);
+    expect(b.sync!.conflicts, isEmpty);
+    final reopened = device(api, cache);
+    addTearDown(reopened.dispose);
+    await reopened.initialize();
+    expect(reopened.deliveries.single.distributedKg, 70);
+  });
   test('dois aparelhos enviam, baixam e atualizam os relatórios manualmente',
       () async {
     final api = FakeBatchApi();
