@@ -1,4 +1,5 @@
 import { MongoServerError, type Collection, type Db, type Filter } from 'mongodb';
+import { batchNotifications, type BatchNotification } from '../domain/notifications.js';
 import type { Batch } from '../domain/batch.js';
 
 export interface BatchFilter {
@@ -7,6 +8,10 @@ export interface BatchFilter {
   status?: 'pending' | 'completed';
 }
 export interface BatchRepository {
+  pendingNotifications(): Promise<BatchNotification[]>;
+  claimNotification(id: string): Promise<boolean>;
+  markNotificationSent(id: string): Promise<void>;
+  notifications(offset: number, limit: number): Promise<BatchNotification[]>;
   insert(batch: Batch): Promise<void>;
   insertIfAbsent(batch: Batch): Promise<boolean>;
   get(id: string): Promise<Batch | null>;
@@ -16,6 +21,7 @@ export interface BatchRepository {
 }
 interface BatchDocument extends Batch {
   _id: string;
+  activity?: (BatchNotification & { pushSentAt?: Date; pushLeaseUntil?: Date })[];
 }
 export class MongoBatchRepository implements BatchRepository {
   private readonly collection: Collection<BatchDocument>;
@@ -26,13 +32,17 @@ export class MongoBatchRepository implements BatchRepository {
     await this.collection.createIndex({ date: -1, _id: 1 });
   }
   async insert(batch: Batch) {
-    await this.collection.insertOne({ _id: batch.id, ...batch });
+    await this.collection.insertOne({
+      _id: batch.id,
+      ...batch,
+      activity: batchNotifications(null, batch),
+    });
   }
   async insertIfAbsent(batch: Batch) {
     try {
       const result = await this.collection.updateOne(
         { _id: batch.id },
-        { $setOnInsert: { _id: batch.id, ...batch } },
+        { $setOnInsert: { _id: batch.id, ...batch, activity: batchNotifications(null, batch) } },
         { upsert: true },
       );
       return result.upsertedCount === 1;
@@ -44,7 +54,7 @@ export class MongoBatchRepository implements BatchRepository {
   async get(id: string) {
     const doc = await this.collection.findOne({ _id: id });
     if (!doc) return null;
-    const { _id, ...batch } = doc;
+    const { _id, activity, ...batch } = doc;
     return batch;
   }
   private filter(input: BatchFilter): Filter<BatchDocument> {
@@ -66,15 +76,75 @@ export class MongoBatchRepository implements BatchRepository {
       .skip(offset)
       .limit(limit)
       .toArray();
-    return docs.map(({ _id, ...batch }) => batch);
+    return docs.map(({ _id, activity, ...batch }) => batch);
   }
   async count(filter: BatchFilter) {
     return this.collection.countDocuments(this.filter(filter));
   }
+  async pendingNotifications(): Promise<BatchNotification[]> {
+    return this.collection
+      .aggregate<BatchNotification>([
+        { $unwind: '$activity' },
+        {
+          $match: {
+            'activity.pushSentAt': { $exists: false },
+            'activity.createdAt': { $gte: new Date(Date.now() - 86400000).toISOString() },
+            $or: [
+              { 'activity.pushLeaseUntil': { $exists: false } },
+              { 'activity.pushLeaseUntil': { $lt: new Date() } },
+            ],
+          },
+        },
+        { $replaceRoot: { newRoot: '$activity' } },
+        { $sort: { createdAt: 1, type: -1, id: 1 } },
+        { $limit: 20 },
+      ])
+      .toArray();
+  }
+  async claimNotification(id: string): Promise<boolean> {
+    const result = await this.collection.updateOne(
+      {
+        activity: {
+          $elemMatch: {
+            id,
+            pushSentAt: { $exists: false },
+            $or: [{ pushLeaseUntil: { $exists: false } }, { pushLeaseUntil: { $lt: new Date() } }],
+          },
+        },
+      },
+      { $set: { 'activity.$.pushLeaseUntil': new Date(Date.now() + 120000) } },
+    );
+    return result.modifiedCount === 1;
+  }
+  async markNotificationSent(id: string) {
+    await this.collection.updateOne(
+      { 'activity.id': id },
+      { $set: { 'activity.$.pushSentAt': new Date() } },
+    );
+  }
+  async notifications(offset: number, limit: number): Promise<BatchNotification[]> {
+    return this.collection
+      .aggregate<BatchNotification>([
+        { $unwind: '$activity' },
+        { $replaceRoot: { newRoot: '$activity' } },
+        { $project: { id: 1, batchId: 1, batchName: 1, type: 1, createdAt: 1 } },
+        { $sort: { createdAt: -1, id: -1 } },
+        { $skip: offset },
+        { $limit: limit },
+      ])
+      .toArray();
+  }
   async replace(batch: Batch, expectedRevision: number) {
-    const result = await this.collection.replaceOne(
+    const previous = await this.get(batch.id);
+    if (!previous || previous.revision !== expectedRevision) return false;
+    const events = batchNotifications(previous, batch);
+    // Estado e avisos são gravados atomicamente no mesmo documento.
+    const result = await this.collection.updateOne(
       { _id: batch.id, revision: expectedRevision },
-      batch,
+      {
+        $set: batch,
+        ...(events.length ? { $push: { activity: { $each: events, $slice: -200 } } } : {}),
+      },
     );
     return result.matchedCount === 1;
   }

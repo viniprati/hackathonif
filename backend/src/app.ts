@@ -1,3 +1,4 @@
+import type { PushGateway } from './push.js';
 import { randomUUID } from 'node:crypto';
 import Fastify, { type FastifyError } from 'fastify';
 import cors from '@fastify/cors';
@@ -11,6 +12,7 @@ import { batchRoutes } from './routes/batches.js';
 
 interface Options {
   repository: BatchRepository;
+  push?: PushGateway;
   jwtSecret: string;
   mvpCpf: string;
   mvpPassword: string;
@@ -154,6 +156,35 @@ export async function buildApp(options: Options) {
         }
       });
       api.get('/auth/me', async () => ({ id: 'mvp', name: 'Usuário MVP' }));
+      api.get('/notifications/push-status', async () => ({ configured: Boolean(options.push) }));
+      api.post<{ Body: { token: string; enabled: boolean } }>(
+        '/notifications/push',
+        {
+          config: { rateLimit: { max: 10, timeWindow: '1 minute' } },
+          schema: {
+            body: {
+              type: 'object',
+              additionalProperties: false,
+              required: ['token', 'enabled'],
+              properties: {
+                token: { type: 'string', minLength: 20, maxLength: 4096 },
+                enabled: { type: 'boolean' },
+              },
+            },
+          },
+        },
+        async (request, reply) => {
+          if (!options.push)
+            return reply.code(503).send({
+              error: {
+                code: 'PUSH_NOT_CONFIGURED',
+                message: 'O envio push ainda não foi configurado.',
+              },
+            });
+          await options.push.subscribe(request.body.token, request.body.enabled);
+          return { enabled: request.body.enabled };
+        },
+      );
       await batchRoutes(api, options.repository);
     },
     { prefix: '/v1' },

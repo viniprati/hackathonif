@@ -42,6 +42,20 @@ test(
     assert.equal(results.filter(Boolean).length, 1);
     assert.equal((await repository.get(batch.id))!.revision, 1);
     assert.equal(await repository.count({ status: 'completed' }), 1);
+    const notices = await new MongoBatchRepository(db).notifications(0, 50);
+    assert.equal(notices.filter((n) => n.type === 'created').length, 1);
+    assert.equal(notices.filter((n) => n.type === 'completed').length, 1);
+    const noticeId = notices[0]!.id;
+    const claims = await Promise.all([
+      repository.claimNotification(noticeId),
+      repository.claimNotification(noticeId),
+    ]);
+    assert.equal(claims.filter(Boolean).length, 1);
+    await repository.markNotificationSent(noticeId);
+    assert.equal(
+      (await new MongoBatchRepository(db).pendingNotifications()).some((n) => n.id === noticeId),
+      false,
+    );
     const app = await buildApp({
       repository,
       ...credentials,

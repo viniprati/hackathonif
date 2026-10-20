@@ -62,7 +62,7 @@ void main() {
             .widget<TextFormField>(find.byType(TextFormField).first)
             .controller
             ?.text,
-        '12345678901',
+        '123.456.789-01',
       );
       await tester.ensureVisible(find.text('Entrar'));
       await tester.ensureVisible(find.text('Entrar'));

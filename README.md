@@ -2,7 +2,7 @@
 
 Protótipo Flutter para organizar montantes de alimentos e calcular sua distribuição entre escolas, com foco inicial na associação **Aprovista**.
 
-Versão: **1.3.0+12**, conforme o [pubspec.yaml](pubspec.yaml). O histórico de mudanças está no [CHANGELOG.md](CHANGELOG.md).
+Versão: **1.4.0+13**, conforme o [pubspec.yaml](pubspec.yaml). O histórico de mudanças está no [CHANGELOG.md](CHANGELOG.md).
 
 ## Problema, público-alvo e solução
 
@@ -28,6 +28,8 @@ A cópia de trabalho local é restaurada ao reabrir o app, após o login. Se dua
 - **Notas de referência:** itens, preços e totais transcritos de duas DANFEs fornecidas, separados dos totais dos montantes para evitar dupla contagem.
 - **Perfil:** dados fixos de demonstração, saída e sincronização manual com indicador de pendências, última atualização e revisão de conflitos. Montantes sincronizados alimentam também Produtos, gráficos e PDFs locais.
 - **Interface em português do Brasil:** navegação inferior em telas menores e lateral em telas maiores.
+- **Avisos de montantes:** central compartilhada de cadastros e conclusões após sincronizar. Opções no Perfil, com preparação para push Android via Firebase; configuração e teste real de entrega ainda pendentes. Veja [Notificações](docs/NOTIFICACOES.md).
+- **CPF:** máscara automática de pontos e traço durante o login, mantendo o envio à API somente com números.
 - **Acessibilidade:** alto contraste salvo no aparelho, rótulos acessíveis, orientação e foco nos erros, confirmação de substituições e desfazer no rascunho. Disponível na barra superior e no Perfil; veja os recursos, limites e roteiro de teste em [Acessibilidade](docs/ACESSIBILIDADE.md).
 - **Tamanho das letras:** controles no topo, disponíveis desde o login, para aumentar em etapas de 20% até 200%, diminuir ou restaurar o tamanho do aparelho. O ajuste vale também para detalhes e pop-ups, respeita a configuração de fonte do sistema e permanece durante a sessão. Recarregar a página ou reiniciar o app restaura o padrão do aparelho.
 
@@ -48,6 +50,8 @@ As dependências diretas estão declaradas no [pubspec.yaml](pubspec.yaml).
 | `http` | Login e sincronização autenticada com a API REST. |
 | `shared_preferences` | Cache dos montantes, rascunhos e revisões por endereço da API; não armazena credenciais nem token. |
 | `uuid` | Identificador estável antes do primeiro envio, para evitar duplicações ao repetir uma requisição. |
+| `firebase_core` e `firebase_messaging` | Inicialização Firebase e inscrição push Android, ativadas somente após configurar o projeto e conceder permissão. |
+| `firebase-admin` (backend) | Inscrição dos aparelhos no tópico compartilhado e envio dos eventos persistidos ao FCM. |
 | `package_info_plus` | Consulta a versão e o número do build do aplicativo instalado, exibidos no Perfil. |
 | `pdf` e `printing` | Geração dos relatórios em PDF, visualização, compartilhamento e impressão. A prévia Web pode carregar Pdf.js pela internet. |
 | `flutter_test` | Testes de regras de negócio, ViewModel e interações com widgets. |

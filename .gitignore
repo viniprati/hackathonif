@@ -24,3 +24,13 @@ ios/Flutter/flutter_export_environment.sh
 !.env.*.example
 node_modules/
 backend/dist/
+
+# Configuração Firebase local e credenciais do servidor.
+firebase-config*.json
+!firebase-config.example.json
+**/google-services.json
+**/*firebase-adminsdk*.json
+**/service-account*.json
+
+# Cache Kotlin gerado durante a compilação Android.
+android/.kotlin/

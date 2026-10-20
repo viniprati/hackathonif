@@ -146,6 +146,8 @@ void main() {
     testWidgets('reports adapt to width ${size.width}', (tester) async {
       setSize(tester, size);
       await signIn(tester);
+      await tester.ensureVisible(find.text('Relatórios').first);
+      await tester.pumpAndSettle();
       await tester.tap(find.text('Relatórios').first);
       await tester.pumpAndSettle();
       expect(find.text('Mensal'), findsOneWidget);
@@ -161,6 +163,8 @@ void main() {
   testWidgets('batch creation uses only catalog selections', (tester) async {
     setSize(tester, const Size(390, 844));
     await signIn(tester);
+    await tester.ensureVisible(find.text('Cadastrar montante').first);
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Cadastrar montante').first);
     await tester.pumpAndSettle();
     await tester.enterText(
@@ -197,6 +201,11 @@ void main() {
     await tester.tap(find.text('Salvar montante'));
     await tester.pumpAndSettle();
     expect(find.text('Feira de outubro'), findsOneWidget);
+    await tester.scrollUntilVisible(find.text('5 entregas pendentes'), -250,
+        scrollable: find
+            .byWidgetPredicate(
+                (w) => w is Scrollable && w.axisDirection == AxisDirection.down)
+            .first);
     expect(find.text('5 entregas pendentes'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });

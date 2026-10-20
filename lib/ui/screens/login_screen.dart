@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import '../formatters/cpf_formatter.dart';
 
 import '../theme.dart';
 import '../view_models/auth_view_model.dart';
@@ -28,7 +28,7 @@ class _LoginScreenState extends State<LoginScreen> {
   void _submit() {
     if (widget.viewModel.busy || !validateAccessibleForm(_formKey)) return;
     FocusScope.of(context).unfocus();
-    widget.viewModel.signIn(_cpf.text, _password.text);
+    widget.viewModel.signIn(cpfDigits(_cpf.text), _password.text);
   }
 
   @override
@@ -70,20 +70,18 @@ class _LoginScreenState extends State<LoginScreen> {
                           keyboardType: TextInputType.number,
                           autofillHints: const [AutofillHints.username],
                           textInputAction: TextInputAction.next,
-                          inputFormatters: [
-                            FilteringTextInputFormatter.digitsOnly,
-                            LengthLimitingTextInputFormatter(11),
-                          ],
+                          inputFormatters: const [CpfFormatter()],
                           decoration: const InputDecoration(
                             prefixIcon: Icon(Icons.badge_outlined),
                             labelText: 'CPF (obrigatório)',
-                            hintText: '00000000000',
+                            hintText: '000.000.000-00',
                             helperText:
-                                'Digite os 11 números, sem pontos ou traços.',
+                                'Digite 11 números. Os pontos e o traço aparecem automaticamente.',
                           ),
-                          validator: (value) => value?.length == 11
-                              ? null
-                              : 'Informe 11 dígitos.',
+                          validator: (value) =>
+                              cpfDigits(value ?? '').length == 11
+                                  ? null
+                                  : 'Informe 11 dígitos.',
                         ),
                         const SizedBox(height: 16),
                         TextFormField(

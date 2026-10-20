@@ -108,6 +108,22 @@ const syncBody = {
 };
 
 export async function batchRoutes(app: FastifyInstance, repo: BatchRepository) {
+  app.get<{ Querystring: { page?: string } }>(
+    '/notifications',
+    {
+      schema: {
+        querystring: {
+          type: 'object',
+          additionalProperties: false,
+          properties: { page: { type: 'string', pattern: '^[1-9][0-9]{0,3}$' } },
+        },
+      },
+    },
+    async (request) => {
+      const page = Number(request.query.page ?? 1);
+      return { data: await repo.notifications((page - 1) * 50, 50), page, limit: 50 };
+    },
+  );
   app.get('/catalog/foods', async () => ({ foods }));
   app.get('/catalog/schools', async () => ({ schools }));
   app.get('/catalog/invoices', async () => ({ invoices }));
