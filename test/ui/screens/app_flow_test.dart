@@ -11,6 +11,7 @@ Future<void> signIn(WidgetTester tester) async {
   await tester.pumpWidget(testApp(tester));
   await tester.enterText(find.byType(TextFormField).at(0), '12345678901');
   await tester.enterText(find.byType(TextFormField).at(1), 'senha');
+  await tester.ensureVisible(find.text('Entrar'));
   await tester.tap(find.text('Entrar'));
   await tester.pumpAndSettle();
 }
@@ -63,7 +64,8 @@ void main() {
       await tester.enterText(find.byType(TextFormField).at(i), '${values[i]}');
     }
     await tester.pumpAndSettle();
-    await tester.ensureVisible(find.text('Salvar rateio'));
+    await tester.scrollUntilVisible(find.text('Salvar rateio'), 250,
+        scrollable: find.byType(Scrollable).first);
     await tester.pumpAndSettle();
     expect(find.textContaining('Limite excedido'), findsNothing);
     await tester.tap(find.text('Salvar rateio'));
@@ -95,7 +97,8 @@ void main() {
     expect(find.text('IFES'), findsOneWidget);
     await tester.enterText(find.byKey(const Key('school-quantity-IFES')), '60');
     await tester.pumpAndSettle();
-    await tester.ensureVisible(find.text('Salvar rateio'));
+    await tester.scrollUntilVisible(find.text('Salvar rateio'), 250,
+        scrollable: find.byType(Scrollable).first);
     await tester.pumpAndSettle();
     await tester.tap(find.text('Salvar rateio'));
     await tester.pumpAndSettle();
@@ -125,7 +128,9 @@ void main() {
     await tester.tap(find.text('Houve perda').last);
     await tester.pumpAndSettle();
     await tester.enterText(
-        find.widgetWithText(TextFormField, 'Quantidade perdida (kg)'), '10');
+        find.widgetWithText(
+            TextFormField, 'Quantidade perdida (kg, obrigatório)'),
+        '10');
     await tester.tap(find.text('Salvar classificação'));
     await tester.pumpAndSettle();
     final saved = model.deliveries.first;
@@ -159,7 +164,7 @@ void main() {
     await tester.tap(find.text('Cadastrar montante').first);
     await tester.pumpAndSettle();
     await tester.enterText(
-        find.widgetWithText(TextFormField, 'Nome do montante'),
+        find.widgetWithText(TextFormField, 'Nome do montante (obrigatório)'),
         'Feira de outubro');
     FocusManager.instance.primaryFocus?.unfocus();
     await tester.pumpAndSettle();
@@ -167,13 +172,27 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Selecionar todas'));
     await tester.pumpAndSettle();
-    await selectFood(tester, 'Alimento 1', 'Aipim');
-    await tester.enterText(find.widgetWithText(TextFormField, 'Kg'), '40');
+    await selectFood(tester, 'Alimento 1 (obrigatório)', 'Aipim');
+    await tester.enterText(
+        find.ancestor(
+            of: find.byWidgetPredicate((w) =>
+                w is TextField &&
+                w.decoration?.labelText?.startsWith('Quantidade ') == true),
+            matching: find.byType(TextFormField)),
+        '40');
     await tester.ensureVisible(find.text('Adicionar alimento'));
     await tester.tap(find.text('Adicionar alimento'));
     await tester.pumpAndSettle();
-    await selectFood(tester, 'Alimento 2', 'Banana prata');
-    await tester.enterText(find.widgetWithText(TextFormField, 'Kg').last, '20');
+    await selectFood(tester, 'Alimento 2 (obrigatório)', 'Banana prata');
+    await tester.enterText(
+        find
+            .ancestor(
+                of: find.byWidgetPredicate((w) =>
+                    w is TextField &&
+                    w.decoration?.labelText?.startsWith('Quantidade ') == true),
+                matching: find.byType(TextFormField))
+            .last,
+        '20');
     await tester.ensureVisible(find.text('Salvar montante'));
     await tester.tap(find.text('Salvar montante'));
     await tester.pumpAndSettle();

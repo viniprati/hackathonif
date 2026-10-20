@@ -255,6 +255,7 @@ class ManualSync extends ChangeNotifier {
     if (busy) return;
     final link = _links[localId];
     if (link == null) return;
+    final previous = _groups[localId]?.toList() ?? <Delivery>[];
     busy = true;
     sessionExpired = false;
     _changed();
@@ -271,10 +272,15 @@ class ManualSync extends ChangeNotifier {
       message =
           'A versão atual do banco foi carregada. Sincronize novamente para conferir todos os dados.';
     } on SyncFailure catch (failure) {
+      repository.replaceBatch(localId, previous);
+      _links[localId] = link;
       sessionExpired = failure.status == 401;
       message = failure.message;
     } catch (_) {
-      message = 'Não foi possível carregar a versão do banco. Tente novamente.';
+      repository.replaceBatch(localId, previous);
+      _links[localId] = link;
+      message =
+          'Não conseguimos gravar a versão do banco no aparelho. Sua edição local foi mantida. Confira o espaço disponível e tente novamente.';
     } finally {
       busy = false;
       _changed();

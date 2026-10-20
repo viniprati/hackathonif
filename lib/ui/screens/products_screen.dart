@@ -120,7 +120,8 @@ class _ProductsScreenState extends State<ProductsScreen> {
                               const SizedBox(height: 22),
                               TextField(
                                 decoration: const InputDecoration(
-                                  hintText: 'Buscar produto',
+                                  labelText: 'Buscar produto',
+                                  hintText: 'Exemplo: Aipim',
                                   prefixIcon: Icon(Icons.search),
                                 ),
                                 onChanged: (value) =>
@@ -313,7 +314,7 @@ class _MetricCard extends StatelessWidget {
         child: Card(
           margin: EdgeInsets.zero,
           color: NativaColors.lightGreen,
-          child: InkWell(
+          child: AccessibleInkWell(
             key: ValueKey('product-metric-$label'),
             onTap: onTap,
             borderRadius: BorderRadius.circular(18),
@@ -354,7 +355,7 @@ class _ProductCard extends StatelessWidget {
         : (product.distributedKg / product.receivedKg).clamp(0.0, 1.0);
     return Card(
       margin: EdgeInsets.zero,
-      child: InkWell(
+      child: AccessibleInkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(18),
         child: Padding(
@@ -411,10 +412,11 @@ class _ProductCard extends StatelessWidget {
               const SizedBox(height: 8),
               LinearProgressIndicator(
                 value: progress,
+                semanticsLabel: 'Distribuição de ${product.name}',
                 minHeight: 6,
                 borderRadius: BorderRadius.circular(6),
                 backgroundColor: NativaColors.lightGreen,
-                color: NativaColors.green,
+                color: Theme.of(context).colorScheme.primary,
               ),
               const SizedBox(height: 12),
               Wrap(

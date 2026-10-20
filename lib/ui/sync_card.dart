@@ -15,6 +15,7 @@ class SyncCard extends StatefulWidget {
 }
 
 class _SyncCardState extends State<SyncCard> {
+  bool _reviewing = false;
   Future<void> _run(Future<void> Function() operation) async {
     if (widget.sync.busy) return;
     final sync = widget.sync;
@@ -26,6 +27,7 @@ class _SyncCardState extends State<SyncCard> {
             canPop: false,
             child: AlertDialog(
                 title: Text('Sincronizando dados'),
+                scrollable: true,
                 content: Column(mainAxisSize: MainAxisSize.min, children: [
                   CircularProgressIndicator(),
                   SizedBox(height: 20),
@@ -41,40 +43,46 @@ class _SyncCardState extends State<SyncCard> {
   }
 
   Future<void> _review(SyncConflict conflict) async {
-    final useBank = await showDialog<bool>(
-        context: context,
-        builder: (context) => AlertDialog(
-              scrollable: true,
-              title: const Text('Revisar conflito'),
-              content: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(conflict.local.name,
-                        style: const TextStyle(fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 12),
-                    const Text(
-                        'Outra pessoa alterou este montante. Suas alterações estão preservadas no aparelho. Usar a versão do banco substituirá sua edição local.'),
-                    const SizedBox(height: 16),
-                    const Text('Neste aparelho',
-                        style: TextStyle(fontWeight: FontWeight.bold)),
-                    Text(conflict.local.summary),
-                    const SizedBox(height: 16),
-                    const Text('No banco',
-                        style: TextStyle(fontWeight: FontWeight.bold)),
-                    Text(conflict.remote?.snapshot.summary ??
-                        'O montante não está mais no banco. Usar esta versão removerá somente a cópia deste aparelho.'),
-                  ]),
-              actions: [
-                TextButton(
-                    onPressed: () => Navigator.pop(context, false),
-                    child: const Text('Manter no aparelho')),
-                FilledButton(
-                    onPressed: () => Navigator.pop(context, true),
-                    child: const Text('Usar versão do banco')),
-              ],
-            ));
-    if (useBank == true && mounted) {
-      await _run(() => widget.sync.useServerVersion(conflict.localId));
+    if (_reviewing || widget.sync.busy) return;
+    setState(() => _reviewing = true);
+    try {
+      final useBank = await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+                scrollable: true,
+                title: Text('Revisar ${conflict.local.name}'),
+                content: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(conflict.local.name,
+                          style: const TextStyle(fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 12),
+                      const Text(
+                          'Outra pessoa alterou este montante. Suas alterações estão preservadas no aparelho. Usar a versão do banco substituirá sua edição local. Não há histórico para recuperar essa edição depois de substituí-la.'),
+                      const SizedBox(height: 16),
+                      const Text('Neste aparelho',
+                          style: TextStyle(fontWeight: FontWeight.bold)),
+                      Text(conflict.local.summary),
+                      const SizedBox(height: 16),
+                      const Text('No banco',
+                          style: TextStyle(fontWeight: FontWeight.bold)),
+                      Text(conflict.remote?.snapshot.summary ??
+                          'O montante não está mais no banco. Usar esta versão removerá somente a cópia deste aparelho. Não será possível recuperar esta edição por aqui.'),
+                    ]),
+                actions: [
+                  TextButton(
+                      onPressed: () => Navigator.pop(context, false),
+                      child: const Text('Manter no aparelho')),
+                  FilledButton(
+                      onPressed: () => Navigator.pop(context, true),
+                      child: const Text('Usar versão do banco')),
+                ],
+              ));
+      if (useBank == true && mounted) {
+        await _run(() => widget.sync.useServerVersion(conflict.localId));
+      }
+    } finally {
+      if (mounted) setState(() => _reviewing = false);
     }
   }
 
@@ -124,7 +132,7 @@ class _SyncCardState extends State<SyncCard> {
                                       style: const TextStyle(
                                           fontWeight: FontWeight.bold)),
                                   OutlinedButton(
-                                      onPressed: sync.busy
+                                      onPressed: sync.busy || _reviewing
                                           ? null
                                           : () => _review(conflict),
                                       child: const Text('Revisar versões')),

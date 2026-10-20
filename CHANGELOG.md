@@ -1,5 +1,16 @@
 # Histórico de versões
 
+## 1.3.0+12 — 20/10/2026
+
+- Alto contraste persistido no aparelho, disponível na barra superior e no Perfil, compatível com o ajuste de fontes.
+- Rótulos acessíveis, estados do calendário, cabeçalhos, alvos de toque e orientação do foco no primeiro erro dos formulários.
+- Formulários com rótulos sempre visíveis, obrigatoriedade, exemplos e disposição adaptada às letras ampliadas.
+- Mensagens distintas para validação, conexão, servidor e armazenamento, preservando o preenchimento para nova tentativa.
+- Confirmação para descarte e substituição de dados, desfazer no rascunho e proteção contra toques repetidos.
+- Preserva a edição local se falhar a gravação da versão remota durante a revisão de conflitos.
+- Backend alinhado à versão 1.3.0; build Android 12 permite atualização sobre o APK anterior.
+- Verificações automatizadas e roteiro de teste nativo em [Acessibilidade](docs/ACESSIBILIDADE.md). TalkBack e VoiceOver permanecem pendentes de teste em dispositivo.
+
 ## 1.2.1+11 — 20/10/2026
 
 - Preserva classes Kotlin acessadas por JNI na otimização do APK release, corrigindo a abertura do armazenamento local após o login.

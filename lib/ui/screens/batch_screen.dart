@@ -54,7 +54,7 @@ class _BatchesScreenState extends State<BatchesScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
+                          const AccessibleHeading(
                             'Controle de montantes',
                             style: TextStyle(
                               fontSize: 28,
@@ -162,7 +162,7 @@ class BatchCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Card(
         margin: EdgeInsets.zero,
-        child: InkWell(
+        child: AccessibleInkWell(
           onTap: onTap,
           borderRadius: BorderRadius.circular(18),
           child: Padding(

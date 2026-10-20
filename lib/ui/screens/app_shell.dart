@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../theme.dart';
+import '../accessibility_settings_panel.dart';
 import '../sync_card.dart';
 import '../app_version_tile.dart';
 import '../view_models/delivery_view_model.dart';
@@ -165,7 +166,7 @@ class ProfileScreen extends StatelessWidget {
           child: ListView(
             padding: const EdgeInsets.all(20),
             children: [
-              const Text(
+              const AccessibleHeading(
                 'Perfil',
                 style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
               ),
@@ -195,6 +196,13 @@ class ProfileScreen extends StatelessWidget {
                   ),
                 ),
               ),
+              if (AccessibilityScope.maybeOf(context) case final settings?) ...[
+                const SizedBox(height: 16),
+                Card(
+                    child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: AccessibilitySettingsPanel(settings: settings))),
+              ],
               const SizedBox(height: 12),
               const Card(
                 child: Column(

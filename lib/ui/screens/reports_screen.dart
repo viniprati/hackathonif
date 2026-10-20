@@ -48,7 +48,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
                   return Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        const Text('Relatórios',
+                        const AccessibleHeading('Relatórios',
                             style: TextStyle(
                                 fontSize: 28,
                                 fontWeight: FontWeight.bold,

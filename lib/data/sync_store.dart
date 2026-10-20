@@ -8,6 +8,7 @@ abstract interface class SyncStore {
 /// Cópia de trabalho para o MVP. O banco é a referência após sincronizar.
 class PreferencesSyncStore implements SyncStore {
   PreferencesSyncStore(String apiUrl) : _key = 'nativa.manualSync.v1.$apiUrl';
+  PreferencesSyncStore.accessibility() : _key = 'nativa.accessibility.v1';
   final String _key;
   final SharedPreferencesAsync _preferences = SharedPreferencesAsync();
   @override

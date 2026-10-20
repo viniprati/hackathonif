@@ -19,8 +19,10 @@ class TextSizeControls extends StatelessWidget {
     super.key,
     required this.step,
     required this.onChanged,
+    this.onAccessibility,
   });
 
+  final VoidCallback? onAccessibility;
   final int step;
   final ValueChanged<int> onChanged;
 
@@ -34,6 +36,11 @@ class TextSizeControls extends StatelessWidget {
               crossAxisAlignment: WrapCrossAlignment.center,
               alignment: WrapAlignment.center,
               children: [
+                if (onAccessibility != null)
+                  IconButton(
+                      tooltip: 'Acessibilidade',
+                      onPressed: onAccessibility,
+                      icon: const Icon(Icons.accessibility_new)),
                 const Padding(
                   padding: EdgeInsets.symmetric(horizontal: 8),
                   child: Text('Letras'),
