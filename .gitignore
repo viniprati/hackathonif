@@ -16,3 +16,11 @@ ios/.symlinks/
 ios/Flutter/Generated.xcconfig
 ios/Flutter/flutter_export_environment.sh
 **/Flutter/ephemeral/
+
+# Configuração local e credenciais (inclui o arquivo .ENV existente).
+.[eE][nN][vV]
+.[eE][nN][vV].*
+!.env.example
+!.env.*.example
+node_modules/
+backend/dist/

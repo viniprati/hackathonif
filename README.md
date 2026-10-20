@@ -10,7 +10,9 @@ O [escopo inicial](anotacoes.txt) descreve alimentos recebidos em montantes e a 
 
 O Nativa é voltado às pessoas que organizam essa distribuição em associações. A proposta é reunir os alimentos de cada montante, registrar os pedidos das escolas e calcular um rateio proporcional, mantendo visíveis os totais, as sobras, as faltas e os status.
 
-**O aplicativo atual é uma demonstração local.** Os exemplos de montantes, alimentos, escolas e perfil são carregados pelo código e ficam em memória. Os cálculos e formulários funcionam localmente, mas não há conexão com serviços de associações ou escolas. Reiniciar o app ou recarregar a página restaura os dados de exemplo.
+**O aplicativo Flutter atual é uma demonstração local.** Os exemplos de montantes, alimentos, escolas e perfil são carregados pelo código e ficam em memória. Os cálculos e formulários funcionam localmente, mas não há conexão com serviços de associações ou escolas. Reiniciar o app ou recarregar a página restaura os dados de exemplo.
+
+O [backend TypeScript](backend/README.md) já possui uma API REST com autenticação JWT de demonstração, persistência MongoDB, montantes, distribuição e relatórios por alimento. Ele é executado separadamente e ainda não está conectado ao Flutter. A conexão ao Atlas depende de `MONGO_URI` válida no ambiente local.
 
 ## Funcionalidades implementadas
 
@@ -47,7 +49,7 @@ As dependências diretas estão declaradas no [pubspec.yaml](pubspec.yaml).
 | `flutter_lints` `^5.0.0` | Regras de análise estática, complementadas pelas opções estritas do projeto. |
 | `flutter_launcher_icons` `^0.14.4` | Ferramenta de desenvolvimento para gerar os ícones de Android, iOS e Web a partir das imagens da marca. |
 
-A organização separa interface, estado, domínio e acesso aos dados. O [DeliveryViewModel](lib/ui/view_models/delivery_view_model.dart) expõe os dados para as telas, e o [DeliveryRepository](lib/data/delivery_repository.dart) mantém os registros em memória. Não há banco de dados nem integração de negócio com um serviço de autenticação ou backend.
+A organização separa interface, estado, domínio e acesso aos dados. O [DeliveryViewModel](lib/ui/view_models/delivery_view_model.dart) expõe os dados para as telas, e o [DeliveryRepository](lib/data/delivery_repository.dart) mantém os registros em memória. O Flutter ainda não consome a API. O backend independente em [backend/](backend/README.md) usa MongoDB para persistir os montantes e possui login JWT com uma conta local de demonstração.
 
 ## Pré-requisitos e instalação
 
@@ -118,7 +120,7 @@ Use dados fictícios: a tela exige 11 dígitos no campo CPF e preenchimento do c
 
 ## Configurações
 
-O app não exige `.env`, variáveis de ambiente próprias, chaves de API ou configuração de backend. Os exemplos são definidos em [delivery_repository.dart](lib/data/delivery_repository.dart), e o tema e os formatos de exibição estão em [theme.dart](lib/ui/theme.dart).
+O Flutter ainda não exige `.env`, variáveis de ambiente próprias, chaves de API ou configuração de backend. A API TypeScript usa configuração própria, descrita em [backend/README.md](backend/README.md). Os exemplos são definidos em [delivery_repository.dart](lib/data/delivery_repository.dart), e o tema e os formatos de exibição estão em [theme.dart](lib/ui/theme.dart).
 
 A logo utilizada nas telas está em [assets/images/nativa_logo.png](assets/images/nativa_logo.png). O arquivo [assets/images/nativa_launcher.png](assets/images/nativa_launcher.png) é a base dos ícones, conforme a configuração `flutter_launcher_icons` no `pubspec.yaml`. Para regenerá-los, após instalar as dependências:
 
@@ -130,9 +132,26 @@ Essa ferramenta modifica os arquivos de ícones das plataformas e só é necess�
 
 Os catálogos ficam em [catalog.dart](lib/domain/catalog.dart), e os itens das notas em [invoice_reference.dart](lib/domain/invoice_reference.dart). Os PDFs usam fontes locais para preservar acentos; a licença das fontes está em [Roboto_LICENSE.txt](assets/fonts/Roboto_LICENSE.txt). Os documentos originais não são distribuídos com o aplicativo.
 
+## Backend TypeScript
+
+A configuração e os contratos HTTP estão em [backend/README.md](backend/README.md). Requer Node.js 22.13 ou superior e MongoDB Atlas configurado. O backend possui dependências e lockfile próprios em [backend/package.json](backend/package.json).
+
+```sh
+cd backend
+npm ci
+# Configure backend/.env conforme o README do backend.
+npm run db:check
+npm run dev
+```
+
+A conta MVP é configurada localmente por `MVP_CPF` e `MVP_PASSWORD`. JWTs são assinados com `JWT_SECRET`. A API oferece rotas de saúde, login, catálogos, montantes, distribuição com revisão e relatórios semanais/mensais por alimento. O MongoDB não recebe dados fictícios automaticamente.
+
+Para validar a API, execute dentro de `backend/`: `npm run typecheck`, `npm test`, `npm run test:integration` e `npm run build`. Os testes de integração usam um MongoDB local temporário, separado do Atlas. Nenhuma credencial do ambiente deve ser versionada.
+
 ## Estrutura de pastas
 
 ```text
+backend/                    API TypeScript, configuração, documentação e testes
 lib/
   main.dart                 Inicialização, tema, localização e acesso de demonstração
   data/                     Repositório com dados de exemplo e armazenamento em memória
@@ -175,7 +194,7 @@ Nesta revisão, a análise estática terminou sem ocorrências, os testes Flutte
 
 ## Limitações atuais
 
-- Os registros existem apenas em memória, sem banco de dados, sincronização ou persistência entre reinicializações.
+- No Flutter, os registros ainda existem apenas em memória, sem sincronização com o backend ou persistência entre reinicializações. A API possui persistência MongoDB, mas precisa de conexão Atlas válida e integração com o app.
 - O acesso, o perfil e os dados iniciais são de demonstração. Não há contas, permissões por função ou recuperação de senha real.
 - O recorte implementado é a Aprovista; não há seleção nem isolamento de dados entre associações.
 - O PDF é um relatório gerencial de alimentos e valores, não uma nota fiscal. Não há emissão fiscal, importação automática de novas notas, envio de fotos ou comprovantes assinados.
@@ -189,7 +208,7 @@ Nesta revisão, a análise estática terminou sem ocorrências, os testes Flutte
 
 ## Próximos passos propostos
 
-- Adicionar armazenamento permanente e autenticação com regras de acesso.
+- Integrar o Flutter à API MongoDB e substituir a conta única do backend por usuários persistidos e regras de acesso.
 - Validar o fluxo de pedidos, rateio e confirmação de entregas com a Aprovista.
 - Estruturar cadastros e permissões para outras associações citadas no escopo, como Aprucas, Aproder e CAFC.
 - Integrar novas notas e comprovantes após definir armazenamento e regras operacionais.
