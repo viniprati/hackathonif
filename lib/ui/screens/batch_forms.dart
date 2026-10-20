@@ -46,7 +46,6 @@ class _NewBatchDialogState extends State<NewBatchDialog> {
   final _items = [_ItemInputs()];
   final _participatingSchools = <String>{};
   DateTime _date = DateTime.now();
-  String? _invoiceNumber;
 
   @override
   void dispose() {
@@ -59,16 +58,7 @@ class _NewBatchDialogState extends State<NewBatchDialog> {
 
   void _selectFood(_ItemInputs item, String? food) {
     item.food = food;
-    int? price;
-    if (food != null) {
-      price = _invoiceNumber == null
-          ? findFood(food)?.priceCents
-          : widget.viewModel.invoices
-              .firstWhere((invoice) => invoice.number == _invoiceNumber)
-              .items
-              .firstWhere((line) => line.food == food)
-              .unitPriceCents;
-    }
+    final price = food == null ? null : findFood(food)?.priceCents;
     item.price.text = price == null
         ? ''
         : (price / 100).toStringAsFixed(2).replaceAll('.', ',');
@@ -76,13 +66,8 @@ class _NewBatchDialogState extends State<NewBatchDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final allowedFoods = _invoiceNumber == null
-        ? widget.viewModel.foods.map((food) => food.name).toList()
-        : widget.viewModel.invoices
-            .firstWhere((invoice) => invoice.number == _invoiceNumber)
-            .items
-            .map((line) => line.food)
-            .toList();
+    final allowedFoods =
+        widget.viewModel.foods.map((food) => food.name).toList();
     return Dialog(
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 650),
@@ -179,30 +164,9 @@ class _NewBatchDialogState extends State<NewBatchDialog> {
                       ],
                     ),
                   ),
-                  DropdownButtonFormField<String>(
-                    initialValue: _invoiceNumber ?? '',
-                    isExpanded: true,
-                    decoration:
-                        const InputDecoration(labelText: 'Nota de referência'),
-                    items: [
-                      const DropdownMenuItem(
-                          value: '', child: Text('Sem nota vinculada')),
-                      for (final invoice in widget.viewModel.invoices)
-                        DropdownMenuItem(
-                            value: invoice.number,
-                            child: Text(
-                                'NF ${invoice.number} • ${formatDate(invoice.issuedAt)}')),
-                    ],
-                    onChanged: (value) => setState(() {
-                      _invoiceNumber = value == '' ? null : value;
-                      for (final item in _items) {
-                        _selectFood(item, null);
-                      }
-                    }),
-                  ),
                   const SizedBox(height: 8),
                   const Text(
-                      'Selecione alimentos do catálogo. Preços sem nota vinculada podem ser ajustados; deixe em branco se desconhecidos.',
+                      'Selecione alimentos do catálogo e confirme o preço por kg. Deixe o preço em branco se desconhecido.',
                       style: TextStyle(fontSize: 12, color: NativaColors.gray)),
                   const SizedBox(height: 10),
                   for (var index = 0; index < _items.length; index++)
@@ -213,7 +177,7 @@ class _NewBatchDialogState extends State<NewBatchDialog> {
                           child: Column(children: [
                             DropdownButtonFormField<String>(
                               key: ValueKey(
-                                  '${identityHashCode(_items[index])}-$_invoiceNumber-${_items[index].food}'),
+                                  '${identityHashCode(_items[index])}-${_items[index].food}'),
                               initialValue: _items[index].food,
                               isExpanded: true,
                               decoration: InputDecoration(
@@ -259,7 +223,6 @@ class _NewBatchDialogState extends State<NewBatchDialog> {
                                   Expanded(
                                       child: TextFormField(
                                     controller: _items[index].price,
-                                    readOnly: _invoiceNumber != null,
                                     keyboardType:
                                         const TextInputType.numberWithOptions(
                                             decimal: true),
@@ -284,15 +247,6 @@ class _NewBatchDialogState extends State<NewBatchDialog> {
                                                   (_) => removed.dispose());
                                         }),
                                 ]),
-                            if (_invoiceNumber == null &&
-                                _items[index].food != null &&
-                                findFood(_items[index].food!)?.invoiceNumber !=
-                                    null)
-                              Padding(
-                                  padding: const EdgeInsets.only(top: 6),
-                                  child: Text(
-                                      'Preço inicial de referência: NF ${findFood(_items[index].food!)!.invoiceNumber}',
-                                      style: const TextStyle(fontSize: 11))),
                           ]),
                         )),
                   TextButton.icon(
@@ -317,8 +271,7 @@ class _NewBatchDialogState extends State<NewBatchDialog> {
                                       availableKg:
                                           _parseKg(item.quantity.text)!,
                                       unitPriceCents:
-                                          _parsePrice(item.price.text),
-                                      invoiceNumber: _invoiceNumber),
+                                          _parsePrice(item.price.text)),
                               ]);
                           Navigator.of(context).pop();
                         } on ArgumentError catch (error) {

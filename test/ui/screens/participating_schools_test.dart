@@ -49,6 +49,9 @@ void main() {
                           child: const Text('Cadastrar')))))));
       await tester.tap(find.text('Cadastrar'));
       await tester.pumpAndSettle();
+      expect(find.text('Nota de referência'), findsNothing);
+      expect(find.text('Sem nota vinculada'), findsNothing);
+      expect(find.byType(DropdownButtonFormField<String>), findsOneWidget);
       await tester.enterText(
           find.widgetWithText(TextFormField, 'Nome do montante'),
           'Montante selecionado');
@@ -61,6 +64,15 @@ void main() {
       await tester.tap(find.text('Aipim').last);
       await tester.pumpAndSettle();
       await tester.enterText(find.widgetWithText(TextFormField, 'Kg'), '10');
+      final price = find.widgetWithText(TextFormField, r'R$ / kg');
+      await showTarget(tester, price);
+      expect(
+          tester
+              .widget<TextField>(
+                  find.descendant(of: price, matching: find.byType(TextField)))
+              .readOnly,
+          isFalse);
+      await tester.enterText(price, '7,25');
       await showTarget(tester, find.text('Salvar montante'));
       await tester.tap(find.text('Salvar montante'));
       await tester.pumpAndSettle();
@@ -81,6 +93,8 @@ void main() {
       final delivery = model.deliveries
           .firstWhere((item) => item.batchName == 'Montante selecionado');
       expect(delivery.participatingSchools, ['IFES']);
+      expect(delivery.invoiceNumber, isNull);
+      expect(delivery.unitPriceCents, 725);
       Navigator.of(tester.element(find.text('Cadastrar'))).push(
           MaterialPageRoute<void>(
               builder: (_) =>

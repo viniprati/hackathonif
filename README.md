@@ -2,7 +2,7 @@
 
 Protótipo Flutter para organizar montantes de alimentos e calcular sua distribuição entre escolas, com foco inicial na associação **Aprovista**.
 
-Versão: **1.1.0+6**, conforme o [pubspec.yaml](pubspec.yaml). O histórico de mudanças está no [CHANGELOG.md](CHANGELOG.md).
+Versão: **1.1.0+7**, conforme o [pubspec.yaml](pubspec.yaml). O histórico de mudanças está no [CHANGELOG.md](CHANGELOG.md).
 
 ## Problema, público-alvo e solução
 
@@ -18,7 +18,7 @@ O [backend TypeScript](backend/README.md) já possui uma API REST com autentica�
 
 - **Acesso pela API:** CPF de 11 dígitos e senha são enviados via HTTPS ao backend. O app só abre após receber uma sessão JWT válida, informa credenciais inválidas/falhas de conexão e impede envio duplicado durante a autenticação. A conta única é configurada pelo servidor; não há senha embutida no APK. O token fica em memória e a sessão encerra ao sair, reiniciar ou expirar. Não há validação dos dígitos verificadores do CPF fictício de demonstração.
 - **Início:** calendário com navegação por mês e seleção de dia, montantes pendentes e histórico recente. Os cards de alimentos, escolas e distribuição aparecem somente ao abrir um montante, com informações em pop-ups.
-- **Cadastro de montantes:** nome, data, seleção obrigatória de pelo menos uma escola participante do cadastro definido, alimentos selecionados do catálogo fechado, quantidade em kg, preço por kg e nota de referência opcional. O catálogo contém somente os 10 alimentos distintos das duas notas fornecidas, incluindo as variedades orgânicas.
+- **Cadastro de montantes:** nome, data, seleção obrigatória de pelo menos uma escola participante do cadastro definido, alimentos selecionados do catálogo fechado, quantidade em kg e preço por kg editável, sem vínculo com nota fiscal. O catálogo contém somente os 10 alimentos distintos das duas notas fornecidas, incluindo as variedades orgânicas.
 - **Consulta de montantes:** busca por nome, alimento ou escola e filtros de pendentes e finalizados.
 - **Divisão por alimento:** apenas os pedidos em kg são editáveis. Aparecem apenas as escolas selecionadas no montante, sem edição dos nomes; um campo em branco representa ausência de pedido daquele alimento. A escolha vale para todos os alimentos do montante e é preservada ao salvar o rateio.
 - **Validação dos pedidos:** quantidades em unidades de 0,1 kg e bloqueio quando a soma dos pedidos ultrapassa o recebido, com aviso do excesso. A regra é aplicada no formulário e na camada de dados.
@@ -231,4 +231,4 @@ O fluxo definido para o projeto usa `develop` como integração e base para `fea
 
 A versão segue `MAJOR.MINOR.PATCH+BUILD` no [pubspec.yaml](pubspec.yaml): `MINOR` para novas funcionalidades, `PATCH` para correções e `MAJOR` para mudanças incompatíveis após a versão estável 1.0.0. Durante a fase `0.x`, novas versões menores também podem conter mudanças incompatíveis. O número `BUILD` cresce a cada versão distribuída nas lojas.
 
-Atualize o [CHANGELOG.md](CHANGELOG.md) ao preparar uma versão. Antes de integrar uma release na `main`, valide o aplicativo e execute os testes e a análise estática. As releases usam tags anotadas no formato `vMAJOR.MINOR.PATCH`. A versão atual está registrada no changelog; o sufixo `+6` identifica o build Android 6.
+Atualize o [CHANGELOG.md](CHANGELOG.md) ao preparar uma versão. Antes de integrar uma release na `main`, valide o aplicativo e execute os testes e a análise estática. As releases usam tags anotadas no formato `vMAJOR.MINOR.PATCH`. A versão atual está registrada no changelog; o sufixo `+7` identifica o build Android 7.
