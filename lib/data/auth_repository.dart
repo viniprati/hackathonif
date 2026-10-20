@@ -24,6 +24,8 @@ class AuthRepository {
   String? _accessToken;
   DateTime? _expiresAt;
 
+  String get apiUrl => _baseUri.toString();
+
   String? get accessToken => isAuthenticated ? _accessToken : null;
   DateTime? get expiresAt => _expiresAt;
   bool get isAuthenticated =>
@@ -86,6 +88,21 @@ class AuthRepository {
       throw const AuthFailure(
           'Não foi possível confirmar o acesso. Tente novamente.');
     }
+  }
+
+  Future<http.Response> authenticatedRequest(String method, String path,
+      {Object? body}) async {
+    final token = accessToken;
+    if (token == null) return http.Response('{}', 401);
+    final request = http.Request(method, _baseUri.resolve(path));
+    request.headers.addAll(
+        {'authorization': 'Bearer $token', 'accept': 'application/json'});
+    if (body != null) {
+      request.headers['content-type'] = 'application/json';
+      request.body = jsonEncode(body);
+    }
+    return (() async => http.Response.fromStream(await _client.send(request)))()
+        .timeout(const Duration(seconds: 25));
   }
 
   void signOut() {

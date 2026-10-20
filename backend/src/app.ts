@@ -48,7 +48,10 @@ export async function buildApp(options: Options) {
     verify: { allowedIss: 'nativa-api', allowedAud: 'nativa-app', algorithms: ['HS256'] },
   });
   await app.register(helmet);
-  await app.register(cors, { origin: options.origins?.length ? options.origins : false });
+  await app.register(cors, {
+    origin: options.origins?.length ? options.origins : false,
+    methods: ['GET', 'HEAD', 'POST', 'PUT'],
+  });
   await app.register(rateLimit, { max: 100, timeWindow: '1 minute' });
   app.setErrorHandler((error, request, reply) => {
     if (error instanceof DomainError) {

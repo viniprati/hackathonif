@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'data/auth_repository.dart';
+import 'data/batch_api.dart';
+import 'data/manual_sync.dart';
+import 'data/sync_store.dart';
 import 'data/delivery_repository.dart';
 import 'ui/screens/app_shell.dart';
 import 'ui/screens/login_screen.dart';
@@ -13,7 +16,13 @@ import 'ui/view_models/delivery_view_model.dart';
 void main() => runApp(const NativaApp());
 
 class NativaApp extends StatefulWidget {
-  const NativaApp({super.key, this.authRepository});
+  const NativaApp(
+      {super.key,
+      this.authRepository,
+      this.deliveryRepository,
+      this.syncStore});
+  final DeliveryRepository? deliveryRepository;
+  final SyncStore? syncStore;
   final AuthRepository? authRepository;
 
   @override
@@ -21,12 +30,18 @@ class NativaApp extends StatefulWidget {
 }
 
 class _NativaAppState extends State<NativaApp> {
-  late final DeliveryViewModel _viewModel = DeliveryViewModel(
-    DeliveryRepository(),
-  );
-  late final AuthViewModel _auth = AuthViewModel(
-    widget.authRepository ?? AuthRepository(),
-  );
+  late final AuthRepository _authRepository =
+      widget.authRepository ?? AuthRepository();
+  late final DeliveryRepository _repository =
+      widget.deliveryRepository ?? DeliveryRepository(withExamples: false);
+  late final AuthViewModel _auth = AuthViewModel(_authRepository);
+  late final DeliveryViewModel _viewModel = DeliveryViewModel(_repository,
+      sync: ManualSync(
+          repository: _repository,
+          api: BatchApi(_authRepository),
+          store: widget.syncStore ??
+              PreferencesSyncStore(_authRepository.apiUrl)));
+  late Future<void> _ready = _viewModel.initialize();
   int _textSizeStep = 0;
 
   @override
@@ -76,7 +91,35 @@ class _NativaAppState extends State<NativaApp> {
         home: ListenableBuilder(
           listenable: _auth,
           builder: (context, _) => _auth.isAuthenticated
-              ? AppShell(viewModel: _viewModel, onSignOut: _auth.signOut)
+              ? FutureBuilder<void>(
+                  future: _ready,
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState != ConnectionState.done) {
+                      return const Scaffold(
+                          body: Center(child: CircularProgressIndicator()));
+                    }
+                    if (snapshot.hasError) {
+                      return Scaffold(
+                          body: Center(
+                              child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                            const Padding(
+                                padding: EdgeInsets.all(24),
+                                child: Text(
+                                    'Não foi possível abrir os dados do aparelho. A cópia existente foi preservada.')),
+                            FilledButton(
+                                onPressed: () => setState(
+                                    () => _ready = _viewModel.initialize()),
+                                child: const Text('Tentar novamente')),
+                            TextButton(
+                                onPressed: _auth.signOut,
+                                child: const Text('Sair')),
+                          ])));
+                    }
+                    return AppShell(
+                        viewModel: _viewModel, onSignOut: _auth.signOut);
+                  })
               : LoginScreen(viewModel: _auth),
         ),
       );

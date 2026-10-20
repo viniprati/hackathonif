@@ -66,5 +66,12 @@ test(
     assert.equal(response.json().totals.distributedKg, 100);
     const ready = await app.inject('/health/ready');
     assert.equal(ready.statusCode, 200);
+    const concurrent = createBatch(input);
+    const inserted = await Promise.all([
+      repository.insertIfAbsent(concurrent),
+      repository.insertIfAbsent(concurrent),
+    ]);
+    assert.equal(inserted.filter(Boolean).length, 1);
+    assert.equal((await repository.get(concurrent.id))!.id, concurrent.id);
   },
 );

@@ -1,4 +1,5 @@
 import type { FastifyInstance } from 'fastify';
+import { syncBatch, batchContent, type SyncBatchInput } from '../domain/sync.js';
 import {
   batchDto,
   createBatch,
@@ -84,6 +85,28 @@ const allocationBody = {
   },
 };
 
+const syncBody = {
+  ...createBody,
+  required: [...createBody.required, 'revision'],
+  properties: {
+    ...createBody.properties,
+    revision: { type: ['integer', 'null'], minimum: 0, maximum: Number.MAX_SAFE_INTEGER },
+    items: {
+      ...createBody.properties.items,
+      items: {
+        ...createBody.properties.items.items,
+        required: [...createBody.properties.items.items.required, 'status', 'requests', 'lossKg'],
+        properties: {
+          ...createBody.properties.items.items.properties,
+          status: { type: 'string', enum: ['pending', 'completed'] },
+          requests: allocationBody.properties.requests,
+          lossKg: { ...quantity, type: ['number', 'null'] },
+        },
+      },
+    },
+  },
+};
+
 export async function batchRoutes(app: FastifyInstance, repo: BatchRepository) {
   app.get('/catalog/foods', async () => ({ foods }));
   app.get('/catalog/schools', async () => ({ schools }));
@@ -99,6 +122,50 @@ export async function batchRoutes(app: FastifyInstance, repo: BatchRepository) {
         'Montante cadastrado',
       );
       return reply.code(201).header('location', `/v1/batches/${batch.id}`).send(batchDto(batch));
+    },
+  );
+  app.put<{ Params: { batchId: string }; Body: SyncBatchInput }>(
+    '/batches/:batchId/sync',
+    { schema: { params: batchParams, body: syncBody } },
+    async (request, reply) => {
+      const id = request.params.batchId;
+      let previous = await repo.get(id);
+      const next = syncBatch(id, request.body, previous);
+      // Repetir uma gravação já aplicada não duplica montantes nem avança a revisão.
+      if (previous && batchContent(previous) === batchContent(next)) return batchDto(previous);
+      if (previous && request.body.revision !== previous.revision)
+        throw new DomainError(
+          'REVISION_CONFLICT',
+          'Outro usuário alterou este montante. Revise as versões antes de sincronizar.',
+          409,
+        );
+      if (!previous && request.body.revision !== null)
+        throw new DomainError(
+          'REVISION_CONFLICT',
+          'O montante não está mais disponível no banco.',
+          409,
+        );
+      if (previous) {
+        if (!(await repo.replace(next, previous.revision)))
+          throw new DomainError(
+            'REVISION_CONFLICT',
+            'O montante foi alterado durante a sincronização.',
+            409,
+          );
+      } else if (!(await repo.insertIfAbsent(next))) {
+        previous = await repo.get(id);
+        if (previous && batchContent(previous) === batchContent(next)) return batchDto(previous);
+        throw new DomainError(
+          'REVISION_CONFLICT',
+          'Este montante já existe com outros dados.',
+          409,
+        );
+      }
+      request.log.info(
+        { event: 'batch_synced', batchId: id, revision: next.revision },
+        'Montante sincronizado',
+      );
+      return reply.code(previous ? 200 : 201).send(batchDto(next));
     },
   );
   app.get<{

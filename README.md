@@ -2,7 +2,7 @@
 
 Protótipo Flutter para organizar montantes de alimentos e calcular sua distribuição entre escolas, com foco inicial na associação **Aprovista**.
 
-Versão: **1.1.0+8**, conforme o [pubspec.yaml](pubspec.yaml). O histórico de mudanças está no [CHANGELOG.md](CHANGELOG.md).
+Versão: **1.1.0+9**, conforme o [pubspec.yaml](pubspec.yaml). O histórico de mudanças está no [CHANGELOG.md](CHANGELOG.md).
 
 ## Problema, público-alvo e solução
 
@@ -10,9 +10,9 @@ O [escopo inicial](anotacoes.txt) descreve alimentos recebidos em montantes e a 
 
 O Nativa é voltado às pessoas que organizam essa distribuição em associações. A proposta é reunir os alimentos de cada montante, registrar os pedidos das escolas e calcular um rateio proporcional, mantendo visíveis os totais, as sobras, as faltas e os status.
 
-**O login Flutter autentica na API; os dados operacionais continuam locais.** Os exemplos de montantes, alimentos, escolas e perfil são carregados pelo código e ficam em memória. Os cálculos e formulários funcionam localmente, mas não há conexão com serviços de associações ou escolas. Reiniciar o app ou recarregar a página restaura os dados de exemplo.
+**O Flutter autentica e sincroniza montantes com a API real.** Em **Perfil → Sincronizar dados**, envia os montantes e rateios editados neste aparelho e busca os dados compartilhados do MongoDB. A atualização é manual. O aplicativo inicia sem montantes fictícios; os catálogos e o perfil continuam referências definidas no código.
 
-O [backend TypeScript](backend/README.md) já possui uma API REST com autenticação JWT de demonstração, persistência MongoDB, montantes, distribuição e relatórios por alimento. O Flutter utiliza seu endpoint de login; a integração dos montantes e relatórios ainda está pendente. A conexão ao Atlas depende de `MONGO_URI` válida no ambiente local.
+A cópia de trabalho local é restaurada ao reabrir o app, após o login. Se duas pessoas editarem o mesmo montante, o app preserva a edição local e apresenta as duas versões para revisão. Consulte o [fluxo de sincronização e suas limitações](docs/SINCRONIZACAO.md).
 
 ## Funcionalidades implementadas
 
@@ -26,7 +26,7 @@ O [backend TypeScript](backend/README.md) já possui uma API REST com autentica�
 - **Dashboard de produtos:** agrupamento de lotes por nome de produto, totais recebidos, rateados e sem rateio, busca, filtros por status e acesso aos detalhes dos lotes. Os três indicadores abrem o catálogo, os recebimentos por produto e os rateios por escola.
 - **Relatórios:** gráficos de pizza do destino dos alimentos, colunas de recebido e distribuído por alimento e barras horizontais por escola; filtros semanal e mensal, distribuição por escola, quantidades recebidas, pendências, sobras, perdas e taxa de perdas. A tela e o PDF consolidam os recebimentos por alimento, com quantidades, valores e distribuição por escola. Os valores somam os preços de cada recebimento; subtotais com preços ausentes ficam sinalizados como parciais. O PDF usa tabelas sem gráficos e pode ser visualizado, baixado ou impresso.
 - **Notas de referência:** itens, preços e totais transcritos de duas DANFEs fornecidas, separados dos totais dos montantes para evitar dupla contagem.
-- **Perfil:** dados fixos de demonstração com opção de sair.
+- **Perfil:** dados fixos de demonstração, saída e sincronização manual com indicador de pendências, última atualização e revisão de conflitos. Montantes sincronizados alimentam também Produtos, gráficos e PDFs locais.
 - **Interface em português do Brasil:** navegação inferior em telas menores e lateral em telas maiores.
 - **Tamanho das letras:** controles no topo, disponíveis desde o login, para aumentar em etapas de 20% até 200%, diminuir ou restaurar o tamanho do aparelho. O ajuste vale também para detalhes e pop-ups, respeita a configuração de fonte do sistema e permanece durante a sessão. Recarregar a página ou reiniciar o app restaura o padrão do aparelho.
 
@@ -44,14 +44,16 @@ As dependências diretas estão declaradas no [pubspec.yaml](pubspec.yaml).
 | Flutter e Material 3 | Interface compartilhada para Web, Android e iOS, com layouts adaptados à largura disponível. |
 | `flutter_localizations` | Localização dos componentes do Flutter para `pt_BR`. |
 | `ChangeNotifier` e `ListenableBuilder` | Recursos do Flutter usados para atualizar a interface quando os dados mudam, sem pacote externo de gerenciamento de estado. |
-| `http` | Comunicação do login Flutter com a API REST. |
+| `http` | Login e sincronização autenticada com a API REST. |
+| `shared_preferences` | Cache dos montantes, rascunhos e revisões por endereço da API; não armazena credenciais nem token. |
+| `uuid` | Identificador estável antes do primeiro envio, para evitar duplicações ao repetir uma requisição. |
 | `package_info_plus` | Consulta a versão e o número do build do aplicativo instalado, exibidos no Perfil. |
 | `pdf` e `printing` | Geração dos relatórios em PDF, visualização, compartilhamento e impressão. A prévia Web pode carregar Pdf.js pela internet. |
 | `flutter_test` | Testes de regras de negócio, ViewModel e interações com widgets. |
 | `flutter_lints` `^5.0.0` | Regras de análise estática, complementadas pelas opções estritas do projeto. |
 | `flutter_launcher_icons` `^0.14.4` | Ferramenta de desenvolvimento para gerar os ícones de Android, iOS e Web a partir das imagens da marca. |
 
-A organização separa interface, estado, domínio e acesso aos dados. O [DeliveryViewModel](lib/ui/view_models/delivery_view_model.dart) expõe os dados para as telas, e o [DeliveryRepository](lib/data/delivery_repository.dart) mantém os registros em memória. O [AuthRepository](lib/data/auth_repository.dart) consome o login da API; o repositório de montantes ainda é local. O backend independente em [backend/](backend/README.md) usa MongoDB para persistir os montantes e possui login JWT com uma conta local de demonstração.
+A organização separa interface, estado, domínio e acesso aos dados. O [DeliveryViewModel](lib/ui/view_models/delivery_view_model.dart) expõe o repositório de trabalho para as telas. O [ManualSync](lib/data/manual_sync.dart) coordena cache, comparação de revisões e envio pela [BatchApi](lib/data/batch_api.dart), usando a sessão do [AuthRepository](lib/data/auth_repository.dart). O [backend](backend/README.md) valida e persiste os montantes no MongoDB.
 
 ## Pré-requisitos e instalação
 
@@ -163,7 +165,7 @@ Para validar a API, execute dentro de `backend/`: `npm run typecheck`, `npm test
 backend/                    API TypeScript, configuração, documentação e testes
 lib/
   main.dart                 Inicialização, tema, localização e acesso de demonstração
-  data/                     Repositório com dados de exemplo e armazenamento em memória
+  data/                     Repositórios, API autenticada, cache e sincronização manual
   domain/                   Modelos, agrupamentos e cálculo proporcional
   ui/
     screens/                Início, montantes, formulários, produtos e detalhes
@@ -199,12 +201,18 @@ flutter test test/domain/proportional_allocation_test.dart
 
 Os testes verificam, entre outros casos, estoque insuficiente, sobra, arredondamento, um cenário com 50 escolas, agrupamentos, atualização dos status, cadastro de montantes e o fluxo de divisão entre escolas. Os testes de widgets usam larguras de 390 e 1024 pixels; isso não equivale a testes em aparelhos físicos.
 
-Nesta revisão, a análise estática terminou sem ocorrências, os testes Flutter passaram e `flutter build web` gerou os arquivos da aplicação com sucesso. A execução em navegador e as compilações nativas não foram verificadas nesta revisão.
+Para executar também o cliente Flutter real contra HTTP e MongoDB temporário, sem usar o Atlas:
+
+```sh
+FLUTTER_BIN="$(command -v flutter)" npm run test:integration --prefix backend
+```
+
+Sem `FLUTTER_BIN`, essa integração específica é pulada pelo backend. `flutter test` sozinho pula o teste que depende dessa API temporária. As verificações cobrem dois clientes, persistência, conflitos e reenvio após perda de resposta; testes de widgets não substituem a validação em celular físico.
 
 ## Limitações atuais
 
-- No Flutter, os registros ainda existem apenas em memória, sem sincronização com o backend ou persistência entre reinicializações. A API possui persistência MongoDB, mas precisa de conexão Atlas válida e integração com o app.
-- O login usa a conta única de demonstração do backend. O perfil e os dados iniciais são exemplos; não há gestão de usuários, permissões por função ou recuperação automática de senha.
+- A sincronização exige ação no Perfil e conexão com a API. Não há atualização em tempo real ou em segundo plano. O cache local é uma conveniência, não um backup: limpeza de dados, desinstalação ou falha de armazenamento pode perder rascunhos ainda não enviados. Sincronize antes de trocar de aparelho. Cada montante é gravado atomicamente, mas a operação completa pode terminar parcialmente.
+- O login usa a conta única de demonstração do backend. O perfil é um exemplo; não há gestão de usuários, permissões por função ou recuperação automática de senha.
 - O recorte implementado é a Aprovista; não há seleção nem isolamento de dados entre associações.
 - O PDF é um relatório gerencial de alimentos e valores, não uma nota fiscal. Não há emissão fiscal, importação automática de novas notas, envio de fotos ou comprovantes assinados.
 - O catálogo de alimentos foi definido a partir das notas fornecidas. O catálogo de escolas contém três entradas originais do protótipo e dez EMEFs públicas de Cariacica–ES, confirmadas na lista municipal. A participação dessas escolas na associação ainda precisa de validação operacional. Veja a [lista e fonte](docs/ESCOLAS.md).
@@ -217,7 +225,7 @@ Nesta revisão, a análise estática terminou sem ocorrências, os testes Flutte
 
 ## Próximos passos propostos
 
-- Integrar os montantes e relatórios Flutter à API MongoDB e substituir a conta única do backend por usuários persistidos e regras de acesso.
+- Substituir a conta única do backend por usuários persistidos, isolamento de associações e regras de acesso; fortalecer o armazenamento local e a recuperação de conflitos.
 - Validar o fluxo de pedidos, rateio e confirmação de entregas com a Aprovista.
 - Estruturar cadastros e permissões para outras associações citadas no escopo, como Aprucas, Aproder e CAFC.
 - Integrar novas notas e comprovantes após definir armazenamento e regras operacionais.
@@ -231,4 +239,4 @@ O fluxo definido para o projeto usa `develop` como integração e base para `fea
 
 A versão segue `MAJOR.MINOR.PATCH+BUILD` no [pubspec.yaml](pubspec.yaml): `MINOR` para novas funcionalidades, `PATCH` para correções e `MAJOR` para mudanças incompatíveis após a versão estável 1.0.0. Durante a fase `0.x`, novas versões menores também podem conter mudanças incompatíveis. O número `BUILD` cresce a cada versão distribuída nas lojas.
 
-Atualize o [CHANGELOG.md](CHANGELOG.md) ao preparar uma versão. Antes de integrar uma release na `main`, valide o aplicativo e execute os testes e a análise estática. As releases usam tags anotadas no formato `vMAJOR.MINOR.PATCH`. A versão atual está registrada no changelog; o sufixo `+8` identifica o build Android 8.
+Atualize o [CHANGELOG.md](CHANGELOG.md) ao preparar uma versão. Antes de integrar uma release na `main`, valide o aplicativo e execute os testes e a análise estática. As releases usam tags anotadas no formato `vMAJOR.MINOR.PATCH`. A versão atual está registrada no changelog; o sufixo `+9` identifica o build Android 9.

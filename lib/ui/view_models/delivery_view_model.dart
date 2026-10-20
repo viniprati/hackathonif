@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 
 import '../../data/delivery_repository.dart';
+import '../../data/manual_sync.dart';
 import '../../domain/batch_summary.dart';
 import '../../domain/models.dart';
 import '../../domain/product_summary.dart';
@@ -10,7 +11,32 @@ import '../../domain/allocation_preview.dart';
 import '../../domain/stock_report.dart';
 
 class DeliveryViewModel extends ChangeNotifier {
-  DeliveryViewModel(this._repository);
+  DeliveryViewModel(this._repository, {this.sync}) {
+    sync?.addListener(notifyListeners);
+  }
+  final ManualSync? sync;
+  bool _disposed = false;
+  Future<void> initialize() async {
+    await sync?.initialize();
+    if (!_disposed) notifyListeners();
+  }
+
+  void _beforeChange() {
+    if (sync?.busy == true) throw StateError('Aguarde a sincronização.');
+  }
+
+  void _afterChange() {
+    sync?.saveSoon();
+    notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    _disposed = true;
+    sync?.removeListener(notifyListeners);
+    sync?.dispose();
+    super.dispose();
+  }
 
   final DeliveryRepository _repository;
   DateTime _selectedMonth = DateTime(DateTime.now().year, DateTime.now().month);
@@ -64,13 +90,14 @@ class DeliveryViewModel extends ChangeNotifier {
     required DateTime date,
     required List<SchoolRequest> requests,
   }) {
+    _beforeChange();
     _repository.add(
       product: product,
       availableKg: availableKg,
       date: date,
       requests: requests,
     );
-    notifyListeners();
+    _afterChange();
   }
 
   int addBatch({
@@ -79,12 +106,13 @@ class DeliveryViewModel extends ChangeNotifier {
     required List<BatchItem> items,
     List<String>? participatingSchools,
   }) {
+    _beforeChange();
     final id = _repository.addBatch(
         name: name,
         date: date,
         items: items,
         participatingSchools: participatingSchools);
-    notifyListeners();
+    _afterChange();
     return id;
   }
 
@@ -94,13 +122,15 @@ class DeliveryViewModel extends ChangeNotifier {
     bool remainderConfirmed = false,
     double? lossKg,
   }) {
+    _beforeChange();
     _repository.setRequests(deliveryId, requests,
         remainderConfirmed: remainderConfirmed, lossKg: lossKg);
-    notifyListeners();
+    _afterChange();
   }
 
   void setStatus(int id, DeliveryStatus status) {
+    _beforeChange();
     _repository.setStatus(id, status);
-    notifyListeners();
+    _afterChange();
   }
 }

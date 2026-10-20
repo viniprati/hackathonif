@@ -45,6 +45,12 @@ class _HomeScreenState extends State<HomeScreen> {
                   final mainContent = Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
+                      if (batches.isEmpty && widget.viewModel.sync != null)
+                        const Card(
+                            child: Padding(
+                                padding: EdgeInsets.all(16),
+                                child: Text(
+                                    'Para buscar os dados compartilhados, abra Perfil e toque em Sincronizar dados.'))),
                       _CalendarCard(
                         viewModel: widget.viewModel,
                         batches: batches,
