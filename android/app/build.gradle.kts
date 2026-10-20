@@ -6,6 +6,7 @@ plugins {
 
 android {
     namespace = "com.example.nativa"
+    testBuildType = if (providers.gradleProperty("testRelease").isPresent) "release" else "debug"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -19,6 +20,7 @@ android {
         applicationId = "com.example.nativa"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         // Uses the version code from pubspec.yaml. When using split APKs, 1000 * ABI_VERSION
@@ -31,6 +33,7 @@ android {
 
     buildTypes {
         release {
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
             // TODO: Add your own signing config for the release build.
             // Signing with the debug keys for now, so `flutter run --release` works.
             signingConfig = signingConfigs.getByName("debug")
@@ -46,4 +49,17 @@ kotlin {
 
 flutter {
     source = "../.."
+}
+
+dependencies {
+    // Flutter excludes dev plugins from release; this variant is exclusively for instrumentation.
+    if (providers.gradleProperty("testRelease").isPresent) {
+        implementation(project(":integration_test"))
+        implementation("junit:junit:4.13.2")
+        implementation("androidx.test:runner:1.7.0")
+        implementation("androidx.test:rules:1.7.0")
+    }
+    androidTestImplementation("junit:junit:4.13.2")
+    androidTestImplementation("androidx.test:runner:1.7.0")
+    androidTestImplementation("androidx.test:rules:1.7.0")
 }

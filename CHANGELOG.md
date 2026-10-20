@@ -1,5 +1,12 @@
 # Histórico de versões
 
+## 1.2.1+11 — 20/10/2026
+
+- Preserva classes Kotlin acessadas por JNI na otimização do APK release, corrigindo a abertura do armazenamento local após o login.
+- Botão de tentar novamente corrigido para atualizar o estado sem retornar um Future ao Flutter.
+- Diagnóstico seguro distingue falhas na leitura do armazenamento e no formato do cache, sem registrar seu conteúdo.
+- Teste de integração nativa para ler, gravar e restaurar montantes com o plugin real de armazenamento.
+
 ## 1.2.0+10 — 20/10/2026
 
 - Versão menor incrementada para identificar a nova funcionalidade de sincronização manual introduzida no build 9.

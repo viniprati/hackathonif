@@ -2,7 +2,7 @@
 
 Protótipo Flutter para organizar montantes de alimentos e calcular sua distribuição entre escolas, com foco inicial na associação **Aprovista**.
 
-Versão: **1.2.0+10**, conforme o [pubspec.yaml](pubspec.yaml). O histórico de mudanças está no [CHANGELOG.md](CHANGELOG.md).
+Versão: **1.2.1+11**, conforme o [pubspec.yaml](pubspec.yaml). O histórico de mudanças está no [CHANGELOG.md](CHANGELOG.md).
 
 ## Problema, público-alvo e solução
 
@@ -50,6 +50,7 @@ As dependências diretas estão declaradas no [pubspec.yaml](pubspec.yaml).
 | `package_info_plus` | Consulta a versão e o número do build do aplicativo instalado, exibidos no Perfil. |
 | `pdf` e `printing` | Geração dos relatórios em PDF, visualização, compartilhamento e impressão. A prévia Web pode carregar Pdf.js pela internet. |
 | `flutter_test` | Testes de regras de negócio, ViewModel e interações com widgets. |
+| `integration_test` | Teste nativo de leitura, gravação e abertura do cache após login, em aparelho/emulador de teste. |
 | `flutter_lints` `^5.0.0` | Regras de análise estática, complementadas pelas opções estritas do projeto. |
 | `flutter_launcher_icons` `^0.14.4` | Ferramenta de desenvolvimento para gerar os ícones de Android, iOS e Web a partir das imagens da marca. |
 
@@ -209,6 +210,16 @@ FLUTTER_BIN="$(command -v flutter)" npm run test:integration --prefix backend
 
 Sem `FLUTTER_BIN`, essa integração específica é pulada pelo backend. `flutter test` sozinho pula o teste que depende dessa API temporária. As verificações cobrem dois clientes, persistência, conflitos e reenvio após perda de resposta; testes de widgets não substituem a validação em celular físico.
 
+Para verificar o armazenamento nativo e a abertura após login em Android otimizado, com um aparelho/emulador de teste conectado:
+
+```sh
+cd android
+./gradlew app:connectedReleaseAndroidTest -PtestRelease -Ptarget="$(pwd)/../integration_test/local_cache_test.dart"
+cd ..
+```
+
+Esse teste usa o plugin real de armazenamento com chave exclusiva e login HTTP simulado, sem consultar ou alterar o banco da demonstração. Execute em um aparelho/emulador de teste: o pacote de teste substitui a instalação desse identificador. Após testar, gere novamente o aplicativo normal com `flutter build apk --release`.
+
 ## Limitações atuais
 
 - A sincronização exige ação no Perfil e conexão com a API. Não há atualização em tempo real ou em segundo plano. O cache local é uma conveniência, não um backup: limpeza de dados, desinstalação ou falha de armazenamento pode perder rascunhos ainda não enviados. Sincronize antes de trocar de aparelho. Cada montante é gravado atomicamente, mas a operação completa pode terminar parcialmente.
@@ -239,4 +250,4 @@ O fluxo definido para o projeto usa `develop` como integração e base para `fea
 
 A versão segue `MAJOR.MINOR.PATCH+BUILD` no [pubspec.yaml](pubspec.yaml): `MINOR` para novas funcionalidades, `PATCH` para correções e `MAJOR` para mudanças incompatíveis após a versão estável 1.0.0. Durante a fase `0.x`, novas versões menores também podem conter mudanças incompatíveis. O número `BUILD` cresce a cada versão distribuída nas lojas.
 
-Atualize o [CHANGELOG.md](CHANGELOG.md) ao preparar uma versão. Antes de integrar uma release na `main`, valide o aplicativo e execute os testes e a análise estática. As releases usam tags anotadas no formato `vMAJOR.MINOR.PATCH`. A versão atual está registrada no changelog; o sufixo `+10` identifica o build Android 10.
+Atualize o [CHANGELOG.md](CHANGELOG.md) ao preparar uma versão. Antes de integrar uma release na `main`, valide o aplicativo e execute os testes e a análise estática. As releases usam tags anotadas no formato `vMAJOR.MINOR.PATCH`. A versão atual está registrada no changelog; o sufixo `+11` identifica o build Android 11.

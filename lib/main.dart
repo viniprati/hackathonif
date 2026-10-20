@@ -108,9 +108,15 @@ class _NativaAppState extends State<NativaApp> {
                                 padding: EdgeInsets.all(24),
                                 child: Text(
                                     'Não foi possível abrir os dados do aparelho. A cópia existente foi preservada.')),
+                            Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 24),
+                                child: Text(
+                                    'Código de suporte: ${_viewModel.sync?.initializationFailureCode ?? 'CACHE_INIT_FAILED'}')),
                             FilledButton(
-                                onPressed: () => setState(
-                                    () => _ready = _viewModel.initialize()),
+                                onPressed: () => setState(() {
+                                      _ready = _viewModel.initialize();
+                                    }),
                                 child: const Text('Tentar novamente')),
                             TextButton(
                                 onPressed: _auth.signOut,
