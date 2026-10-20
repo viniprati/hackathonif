@@ -1,5 +1,9 @@
 # Histórico de versões
 
+## 1.1.0+7 — 19/10/2026
+
+- Cadastro de montantes sem seleção ou vínculo de nota fiscal. Preços por kg continuam editáveis e os alimentos disponíveis vêm do catálogo completo.
+
 ## 1.1.0+6 — 19/10/2026
 
 - Login Flutter integrado ao backend: autenticação JWT, rejeição de credenciais inválidas, estados de carregamento/erro e encerramento de sessão ao sair ou expirar.
