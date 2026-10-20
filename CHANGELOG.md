@@ -1,5 +1,13 @@
 # Histórico de versões
 
+## Backend — em desenvolvimento
+
+- API REST TypeScript com Fastify, login JWT de demonstração e persistência MongoDB.
+- Catálogos definidos, montantes com escolas participantes, distribuição com revisão e relatórios por alimento.
+- Validação dos pedidos, classificação de saldo, logs estruturados e rotas de saúde.
+- Testes HTTP e de regras, com integração em MongoDB local temporário.
+- Integração do Flutter com a API pendente; credenciais mantidas em arquivos locais ignorados pelo Git.
+
 ## 1.0.4+4 — 19/10/2026
 
 - Indicadores de produtos com abertura dos detalhes pelo card inteiro, sem hyperlink.
