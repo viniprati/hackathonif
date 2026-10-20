@@ -2,7 +2,7 @@
 
 Protótipo Flutter para organizar montantes de alimentos e calcular sua distribuição entre escolas, com foco inicial na associação **Aprovista**.
 
-Versão: **1.1.0+5**, conforme o [pubspec.yaml](pubspec.yaml). O histórico de mudanças está no [CHANGELOG.md](CHANGELOG.md).
+Versão: **1.1.0+6**, conforme o [pubspec.yaml](pubspec.yaml). O histórico de mudanças está no [CHANGELOG.md](CHANGELOG.md).
 
 ## Problema, público-alvo e solução
 
@@ -10,13 +10,13 @@ O [escopo inicial](anotacoes.txt) descreve alimentos recebidos em montantes e a 
 
 O Nativa é voltado às pessoas que organizam essa distribuição em associações. A proposta é reunir os alimentos de cada montante, registrar os pedidos das escolas e calcular um rateio proporcional, mantendo visíveis os totais, as sobras, as faltas e os status.
 
-**O aplicativo Flutter atual é uma demonstração local.** Os exemplos de montantes, alimentos, escolas e perfil são carregados pelo código e ficam em memória. Os cálculos e formulários funcionam localmente, mas não há conexão com serviços de associações ou escolas. Reiniciar o app ou recarregar a página restaura os dados de exemplo.
+**O login Flutter autentica na API; os dados operacionais continuam locais.** Os exemplos de montantes, alimentos, escolas e perfil são carregados pelo código e ficam em memória. Os cálculos e formulários funcionam localmente, mas não há conexão com serviços de associações ou escolas. Reiniciar o app ou recarregar a página restaura os dados de exemplo.
 
-O [backend TypeScript](backend/README.md) já possui uma API REST com autenticação JWT de demonstração, persistência MongoDB, montantes, distribuição e relatórios por alimento. Ele é executado separadamente e ainda não está conectado ao Flutter. A conexão ao Atlas depende de `MONGO_URI` válida no ambiente local.
+O [backend TypeScript](backend/README.md) já possui uma API REST com autenticação JWT de demonstração, persistência MongoDB, montantes, distribuição e relatórios por alimento. O Flutter utiliza seu endpoint de login; a integração dos montantes e relatórios ainda está pendente. A conexão ao Atlas depende de `MONGO_URI` válida no ambiente local.
 
 ## Funcionalidades implementadas
 
-- **Acesso de demonstração:** formulário com CPF de 11 dígitos, campo de senha obrigatório e opção de mostrar ou ocultar o texto. Não há autenticação real nem validação dos dígitos verificadores do CPF.
+- **Acesso pela API:** CPF de 11 dígitos e senha são enviados via HTTPS ao backend. O app só abre após receber uma sessão JWT válida, informa credenciais inválidas/falhas de conexão e impede envio duplicado durante a autenticação. A conta única é configurada pelo servidor; não há senha embutida no APK. O token fica em memória e a sessão encerra ao sair, reiniciar ou expirar. Não há validação dos dígitos verificadores do CPF fictício de demonstração.
 - **Início:** calendário com navegação por mês e seleção de dia, montantes pendentes e histórico recente. Os cards de alimentos, escolas e distribuição aparecem somente ao abrir um montante, com informações em pop-ups.
 - **Cadastro de montantes:** nome, data, seleção obrigatória de pelo menos uma escola participante do cadastro definido, alimentos selecionados do catálogo fechado, quantidade em kg, preço por kg e nota de referência opcional. O catálogo contém somente os 10 alimentos distintos das duas notas fornecidas, incluindo as variedades orgânicas.
 - **Consulta de montantes:** busca por nome, alimento ou escola e filtros de pendentes e finalizados.
@@ -44,12 +44,14 @@ As dependências diretas estão declaradas no [pubspec.yaml](pubspec.yaml).
 | Flutter e Material 3 | Interface compartilhada para Web, Android e iOS, com layouts adaptados à largura disponível. |
 | `flutter_localizations` | Localização dos componentes do Flutter para `pt_BR`. |
 | `ChangeNotifier` e `ListenableBuilder` | Recursos do Flutter usados para atualizar a interface quando os dados mudam, sem pacote externo de gerenciamento de estado. |
+| `http` | Comunicação do login Flutter com a API REST. |
+| `package_info_plus` | Consulta a versão e o número do build do aplicativo instalado, exibidos no Perfil. |
 | `pdf` e `printing` | Geração dos relatórios em PDF, visualização, compartilhamento e impressão. A prévia Web pode carregar Pdf.js pela internet. |
 | `flutter_test` | Testes de regras de negócio, ViewModel e interações com widgets. |
 | `flutter_lints` `^5.0.0` | Regras de análise estática, complementadas pelas opções estritas do projeto. |
 | `flutter_launcher_icons` `^0.14.4` | Ferramenta de desenvolvimento para gerar os ícones de Android, iOS e Web a partir das imagens da marca. |
 
-A organização separa interface, estado, domínio e acesso aos dados. O [DeliveryViewModel](lib/ui/view_models/delivery_view_model.dart) expõe os dados para as telas, e o [DeliveryRepository](lib/data/delivery_repository.dart) mantém os registros em memória. O Flutter ainda não consome a API. O backend independente em [backend/](backend/README.md) usa MongoDB para persistir os montantes e possui login JWT com uma conta local de demonstração.
+A organização separa interface, estado, domínio e acesso aos dados. O [DeliveryViewModel](lib/ui/view_models/delivery_view_model.dart) expõe os dados para as telas, e o [DeliveryRepository](lib/data/delivery_repository.dart) mantém os registros em memória. O [AuthRepository](lib/data/auth_repository.dart) consome o login da API; o repositório de montantes ainda é local. O backend independente em [backend/](backend/README.md) usa MongoDB para persistir os montantes e possui login JWT com uma conta local de demonstração.
 
 ## Pré-requisitos e instalação
 
@@ -116,11 +118,18 @@ As configurações nativas estão presentes, mas a execução em Android e iOS n
 
 ### Acesso para demonstração
 
-Use dados fictícios: a tela exige 11 dígitos no campo CPF e preenchimento do campo de senha. Não há conta cadastrada, credencial fixa ou consulta a um servidor. O botão de recuperação de senha apenas informa que o serviço ainda precisa ser integrado.
+Use a conta de demonstração configurada nas variáveis privadas `MVP_CPF` e `MVP_PASSWORD` do backend. O app verifica as credenciais na API e precisa de internet. Não existe mais acesso com qualquer CPF/senha. A recuperação de senha orienta procurar a equipe; não há fluxo automático.
 
 ## Configurações
 
-O Flutter ainda não exige `.env`, variáveis de ambiente próprias, chaves de API ou configuração de backend. A API TypeScript usa configuração própria, descrita em [backend/README.md](backend/README.md). Os exemplos são definidos em [delivery_repository.dart](lib/data/delivery_repository.dart), e o tema e os formatos de exibição estão em [theme.dart](lib/ui/theme.dart).
+O Flutter usa `API_BASE_URL` em tempo de compilação. O padrão é `https://hackathonif-production.up.railway.app`; não coloque credenciais nesse valor. Para outro servidor HTTPS, informe `--dart-define=API_BASE_URL=https://sua-api.example.com`. Em desenvolvimento, localhost e `10.0.2.2` podem usar HTTP; no APK release prefira HTTPS, pois as políticas nativas podem bloquear HTTP.
+
+```sh
+flutter run -d chrome --dart-define=API_BASE_URL=http://localhost:3000
+flutter build apk --release --dart-define=API_BASE_URL=https://hackathonif-production.up.railway.app
+```
+
+Para Web, configure `CORS_ORIGINS` no backend com a origem exata do site/servidor local. Sem essa liberação o navegador bloqueia o login; não há fallback local. Não é necessário colocar `.env`, JWT_SECRET ou URI do MongoDB no Flutter. A API TypeScript usa configuração própria, descrita em [backend/README.md](backend/README.md). Os exemplos são definidos em [delivery_repository.dart](lib/data/delivery_repository.dart), e o tema e os formatos de exibição estão em [theme.dart](lib/ui/theme.dart).
 
 A logo utilizada nas telas está em [assets/images/nativa_logo.png](assets/images/nativa_logo.png). O arquivo [assets/images/nativa_launcher.png](assets/images/nativa_launcher.png) é a base dos ícones, conforme a configuração `flutter_launcher_icons` no `pubspec.yaml`. Para regenerá-los, após instalar as dependências:
 
@@ -195,7 +204,7 @@ Nesta revisão, a análise estática terminou sem ocorrências, os testes Flutte
 ## Limitações atuais
 
 - No Flutter, os registros ainda existem apenas em memória, sem sincronização com o backend ou persistência entre reinicializações. A API possui persistência MongoDB, mas precisa de conexão Atlas válida e integração com o app.
-- O acesso, o perfil e os dados iniciais são de demonstração. Não há contas, permissões por função ou recuperação de senha real.
+- O login usa a conta única de demonstração do backend. O perfil e os dados iniciais são exemplos; não há gestão de usuários, permissões por função ou recuperação automática de senha.
 - O recorte implementado é a Aprovista; não há seleção nem isolamento de dados entre associações.
 - O PDF é um relatório gerencial de alimentos e valores, não uma nota fiscal. Não há emissão fiscal, importação automática de novas notas, envio de fotos ou comprovantes assinados.
 - O catálogo de alimentos foi definido a partir das notas fornecidas. As três escolas ainda são as do protótipo e precisam ser substituídas pelo cadastro oficial.
@@ -208,7 +217,7 @@ Nesta revisão, a análise estática terminou sem ocorrências, os testes Flutte
 
 ## Próximos passos propostos
 
-- Integrar o Flutter à API MongoDB e substituir a conta única do backend por usuários persistidos e regras de acesso.
+- Integrar os montantes e relatórios Flutter à API MongoDB e substituir a conta única do backend por usuários persistidos e regras de acesso.
 - Validar o fluxo de pedidos, rateio e confirmação de entregas com a Aprovista.
 - Estruturar cadastros e permissões para outras associações citadas no escopo, como Aprucas, Aproder e CAFC.
 - Integrar novas notas e comprovantes após definir armazenamento e regras operacionais.
@@ -222,4 +231,4 @@ O fluxo definido para o projeto usa `develop` como integração e base para `fea
 
 A versão segue `MAJOR.MINOR.PATCH+BUILD` no [pubspec.yaml](pubspec.yaml): `MINOR` para novas funcionalidades, `PATCH` para correções e `MAJOR` para mudanças incompatíveis após a versão estável 1.0.0. Durante a fase `0.x`, novas versões menores também podem conter mudanças incompatíveis. O número `BUILD` cresce a cada versão distribuída nas lojas.
 
-Atualize o [CHANGELOG.md](CHANGELOG.md) ao preparar uma versão. Antes de integrar uma release na `main`, valide o aplicativo e execute os testes e a análise estática. As releases usam tags anotadas no formato `vMAJOR.MINOR.PATCH`. A versão atual está registrada no changelog; o sufixo `+5` identifica o build Android 5.
+Atualize o [CHANGELOG.md](CHANGELOG.md) ao preparar uma versão. Antes de integrar uma release na `main`, valide o aplicativo e execute os testes e a análise estática. As releases usam tags anotadas no formato `vMAJOR.MINOR.PATCH`. A versão atual está registrada no changelog; o sufixo `+6` identifica o build Android 6.

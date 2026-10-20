@@ -1,5 +1,7 @@
 # Validação da demonstração — Nativa 1.0.4+4
 
+> Registro histórico anterior à correção 1.1.0+6. Nessa correção, o login Flutter passou a consultar a API e o Perfil passou a exibir a versão do pacote. Os montantes ainda são locais; consulte o [README atual](../README.md) para configuração e limitações. Os resultados abaixo se referem à revisão identificada neste relatório.
+
 Verificação executada em 19/10/2026, na branch local `chore/validacao-demonstracao-hackathon`, a partir da `develop` (`b1b5b96`, código integrado na `main` pelo merge `b46c088`). Não houve push, merge ou alteração de registros no Atlas/serviço publicado nesta verificação.
 
 ## Resultado

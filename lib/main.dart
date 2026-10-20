@@ -1,17 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
+import 'data/auth_repository.dart';
 import 'data/delivery_repository.dart';
 import 'ui/screens/app_shell.dart';
 import 'ui/screens/login_screen.dart';
 import 'ui/theme.dart';
 import 'ui/text_size_controls.dart';
+import 'ui/view_models/auth_view_model.dart';
 import 'ui/view_models/delivery_view_model.dart';
 
 void main() => runApp(const NativaApp());
 
 class NativaApp extends StatefulWidget {
-  const NativaApp({super.key});
+  const NativaApp({super.key, this.authRepository});
+  final AuthRepository? authRepository;
 
   @override
   State<NativaApp> createState() => _NativaAppState();
@@ -21,12 +24,15 @@ class _NativaAppState extends State<NativaApp> {
   late final DeliveryViewModel _viewModel = DeliveryViewModel(
     DeliveryRepository(),
   );
-  bool _signedIn = false;
+  late final AuthViewModel _auth = AuthViewModel(
+    widget.authRepository ?? AuthRepository(),
+  );
   int _textSizeStep = 0;
 
   @override
   void dispose() {
     _viewModel.dispose();
+    _auth.dispose();
     super.dispose();
   }
 
@@ -67,11 +73,11 @@ class _NativaAppState extends State<NativaApp> {
           GlobalWidgetsLocalizations.delegate,
           GlobalCupertinoLocalizations.delegate,
         ],
-        home: _signedIn
-            ? AppShell(
-                viewModel: _viewModel,
-                onSignOut: () => setState(() => _signedIn = false),
-              )
-            : LoginScreen(onSignIn: () => setState(() => _signedIn = true)),
+        home: ListenableBuilder(
+          listenable: _auth,
+          builder: (context, _) => _auth.isAuthenticated
+              ? AppShell(viewModel: _viewModel, onSignOut: _auth.signOut)
+              : LoginScreen(viewModel: _auth),
+        ),
       );
 }

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:nativa/main.dart';
+import '../../support/test_app.dart';
 import 'package:nativa/ui/text_size_controls.dart';
 
 void main() {
@@ -13,7 +13,7 @@ void main() {
       (tester) async {
     tester.platformDispatcher.textScaleFactorTestValue = 1.5;
     addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
-    await tester.pumpWidget(const NativaApp());
+    await tester.pumpWidget(testApp(tester));
     final field = find.byType(TextFormField).first;
     expect(MediaQuery.textScalerOf(tester.element(field)).scale(16), 24);
     await tester.tap(find.byTooltip('Aumentar letras'));
@@ -41,7 +41,7 @@ void main() {
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
-      await tester.pumpWidget(const NativaApp());
+      await tester.pumpWidget(testApp(tester));
       await tester.enterText(find.byType(TextFormField).at(0), '12345678901');
       await tester.enterText(find.byType(TextFormField).at(1), 'senha');
       for (var i = 0; i < 5; i++) {
