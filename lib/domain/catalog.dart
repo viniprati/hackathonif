@@ -6,8 +6,23 @@ class FoodCatalogItem {
   final String? invoiceNumber;
 }
 
-// Escolas provisórias já presentes no protótipo; aguardam cadastro oficial.
-const schoolCatalog = ['IFES', 'Pinto Coelho', 'Darllin'];
+// As três entradas originais são do protótipo. As dez EMEFs são de Cariacica–ES.
+// Fonte e bairros: docs/ESCOLAS.md.
+const schoolCatalog = [
+  'IFES',
+  'Pinto Coelho',
+  'Darllin',
+  'EMEF Agustinha Muniz de Oliveira',
+  'EMEF Alice Coutinho Santos',
+  'EMEF Almerinda Portela Colodette',
+  'EMEF Álvaro Armeloni',
+  'EMEF Amenóphis de Assis',
+  'EMEF Angelo Zani',
+  'EMEF Antário Alexandre Theodoro Filho',
+  'EMEF Antero José do Nascimento',
+  'EMEF Antonio Coutinho de Oliveira',
+  'EMEF Arthur da Costa e Silva',
+];
 
 const foodCatalog = [
   FoodCatalogItem('Aipim', priceCents: 572, invoiceNumber: '190720001'),

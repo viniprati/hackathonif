@@ -1,6 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nativa/data/delivery_repository.dart';
-import 'package:nativa/domain/catalog.dart';
 import 'package:nativa/domain/models.dart';
 
 void main() {
@@ -68,10 +67,11 @@ void main() {
     }
   });
 
-  test('registros anteriores continuam com as escolas disponíveis', () {
+  test('montantes de exemplo não recebem automaticamente as novas escolas', () {
     final repo = DeliveryRepository();
     for (final delivery in repo.getAll()) {
-      expect(repo.schoolsForDelivery(delivery), schoolCatalog);
+      expect(repo.schoolsForDelivery(delivery),
+          ['IFES', 'Pinto Coelho', 'Darllin']);
     }
   });
 }

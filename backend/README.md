@@ -5,7 +5,7 @@ Backend inicial em TypeScript para o MVP, separado do aplicativo Flutter. Usa Fa
 ## O que está implementado
 
 - Login com a conta única de demonstração configurada localmente, senha comparada com hash scrypt e JWT válido por uma hora.
-- Catálogo fechado dos mesmos dez alimentos das notas e três escolas provisórias já usadas pelo Flutter.
+- Catálogo fechado dos mesmos dez alimentos das notas e 13 escolas: três entradas originais do protótipo e dez EMEFs públicas de Cariacica–ES, iguais às do Flutter. Fonte: [catálogo de escolas](../docs/ESCOLAS.md).
 - Consulta dos itens das duas notas de referência transcritas, sem dados pessoais dos documentos.
 - Cadastro e consulta paginada de montantes, com data, alimentos, preços e escolas participantes.
 - Distribuição por alimento apenas para escolas participantes. A soma dos pedidos não pode ultrapassar o recebido.
@@ -191,6 +191,6 @@ tests/integration/            MongoDB local temporário
 - Integrar o repositório de montantes Flutter à API, incluindo tratamento de falhas e conflitos. O login já está integrado; o token permanece apenas em memória e a sessão expirada retorna ao login.
 - Substituir a conta local de demonstração por usuários persistidos, perfis de acesso e recuperação de senha.
 - Definir hospedagem, HTTPS, configuração de proxy e estratégia de backup.
-- Substituir as três escolas provisórias pelo catálogo oficial e validar o fluxo com a associação.
+- Revisar as três entradas originais do protótipo e validar com a associação quais escolas públicas cadastradas participam da distribuição.
 
 Referências: [Fastify](https://fastify.dev/docs/latest/), [driver MongoDB](https://www.mongodb.com/docs/drivers/node/current/), [JWT para Fastify](https://github.com/fastify/fastify-jwt), [MongoDB temporário para testes](https://github.com/typegoose/mongodb-memory-server).
