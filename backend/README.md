@@ -96,7 +96,15 @@ Cadastre `MONGO_URI`, `MONGO_DB_NAME`, `JWT_SECRET`, `MVP_CPF` e `MVP_PASSWORD` 
 
 O Flutter usa `API_BASE_URL` via `--dart-define`, com padrão `https://hackathonif-production.up.railway.app`. Login e sincronização usam a mesma URL. Configure `CORS_ORIGINS` para permitir a interface Web; o servidor permite GET, HEAD, POST e PUT nas origens autorizadas. O APK usa HTTPS e não depende de CORS.
 
+## Avisos e push Android
+
+A API registra avisos compartilhados de cadastro e conclusão junto com a alteração do montante no MongoDB. A conclusão ocorre quando todos os alimentos estão finalizados. A sincronização local do Flutter precisa chegar ao servidor antes de gerar o aviso compartilhado.
+
+A variável opcional `FIREBASE_SERVICE_ACCOUNT_JSON` habilita o Firebase Admin e o despachante da fila persistida. Sem ela, a central continua disponível e inscrições push retornam 503, sem simular sucesso. A conta de serviço permanece somente nas variáveis privadas do servidor. Configuração do Android, limites da conta única e teste de entrega em dois aparelhos estão em [Notificações](../docs/NOTIFICACOES.md).
+
 ## Endpoints
+
+Rotas de avisos autenticadas: `GET /v1/notifications?page=1` retorna até 50 eventos por página; `POST /v1/notifications/push` recebe `{token, enabled}` para inscrever ou remover o aparelho do tópico comum, com limite próprio de requisições.
 
 Base local: `http://127.0.0.1:3000`. Todas as rotas `/v1`, exceto o login, exigem `Authorization: Bearer SEU_TOKEN`. Tokens e senhas nunca devem ser enviados pela URL.
 

@@ -118,6 +118,7 @@ void main() {
     await tester.pumpWidget(NativaApp(
         authRepository: testAuthRepository(),
         syncStore: MemorySyncStore(),
+        notificationStore: MemorySyncStore(),
         accessibilityStore: store));
     await tester.pumpAndSettle();
     await tester.enterText(input('CPF'), '12345678900');
@@ -140,12 +141,13 @@ void main() {
     await tester.tap(find.text('Fechar'));
     await tester.pumpAndSettle();
     expect(tester.widget<TextFormField>(input('CPF')).controller!.text,
-        '12345678900');
+        '123.456.789-00');
     expect(MediaQuery.textScalerOf(tester.element(input('CPF'))).scale(16), 32);
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pumpWidget(NativaApp(
         authRepository: testAuthRepository(),
         syncStore: MemorySyncStore(),
+        notificationStore: MemorySyncStore(),
         accessibilityStore: store));
     await tester.pumpAndSettle();
     expect(Theme.of(tester.element(input('CPF'))).colorScheme.primary,
@@ -161,6 +163,7 @@ void main() {
       await tester.pumpWidget(NativaApp(
           authRepository: testAuthRepository(),
           syncStore: MemorySyncStore(),
+          notificationStore: MemorySyncStore(),
           accessibilityStore: MemorySyncStore()
             ..value = '{"highContrast":true}'));
       await tester.pumpAndSettle();

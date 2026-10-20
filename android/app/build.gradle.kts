@@ -4,6 +4,11 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
+// O app continua compilando sem Firebase; push exige o arquivo local.
+if (file("google-services.json").exists()) {
+    apply(plugin = "com.google.gms.google-services")
+}
+
 android {
     namespace = "com.example.nativa"
     testBuildType = if (providers.gradleProperty("testRelease").isPresent) "release" else "debug"

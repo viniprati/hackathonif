@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -43,6 +44,41 @@ void main() {
     expect(find.text('Cadastrar montante'), findsOneWidget);
   });
 
+  testWidgets('CPF pontuado é mostrado e enviado à API somente com números',
+      (tester) async {
+    phoneSize(tester);
+    var calls = 0;
+    final auth = AuthRepository(client: MockClient((request) async {
+      calls++;
+      expect(jsonDecode(request.body)['cpf'], '12345678900');
+      return http.Response('{}', 401);
+    }));
+    addTearDown(() => tester.pumpWidget(const SizedBox.shrink()));
+    await tester.pumpWidget(NativaApp(
+        authRepository: auth,
+        syncStore: MemorySyncStore(),
+        accessibilityStore: MemorySyncStore(),
+        notificationStore: MemorySyncStore()));
+    await tester.enterText(find.byType(TextFormField).at(0), '12345678900');
+    expect(
+        tester
+            .widget<TextFormField>(find.byType(TextFormField).first)
+            .controller!
+            .text,
+        '123.456.789-00');
+    await tester.enterText(find.byType(TextFormField).at(1), 'only-test');
+    await tester.ensureVisible(find.text('Entrar'));
+    await tester.tap(find.text('Entrar'));
+    await tester.pumpAndSettle();
+    expect(calls, 1);
+    expect(
+        tester
+            .widget<TextFormField>(find.byType(TextFormField).first)
+            .controller!
+            .text,
+        '123.456.789-00');
+  });
+
   testWidgets('aguarda servidor e recusa senha incorreta sem abrir início',
       (tester) async {
     phoneSize(tester);
@@ -53,6 +89,7 @@ void main() {
     await tester.pumpWidget(NativaApp(
         authRepository: repository,
         syncStore: MemorySyncStore(),
+        notificationStore: MemorySyncStore(),
         accessibilityStore: MemorySyncStore()));
     await tester.enterText(find.byType(TextFormField).at(0), '00000000000');
     await tester.enterText(find.byType(TextFormField).at(1), 'incorreta');
@@ -83,6 +120,7 @@ void main() {
     await tester.pumpWidget(NativaApp(
         authRepository: testAuthRepository(),
         syncStore: store,
+        notificationStore: MemorySyncStore(),
         accessibilityStore: MemorySyncStore()));
     await tester.enterText(find.byType(TextFormField).at(0), '00000000000');
     await tester.enterText(find.byType(TextFormField).at(1), 'somente-teste');
@@ -110,7 +148,15 @@ void main() {
     await tester.ensureVisible(find.text('Entrar'));
     await tester.tap(find.text('Entrar'));
     await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Perfil').last);
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Perfil').last);
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(find.text('Versão 9.8.7 (42)'), 200,
+        scrollable: find
+            .byWidgetPredicate(
+                (w) => w is Scrollable && w.axisDirection == AxisDirection.down)
+            .first);
     await tester.pumpAndSettle();
     expect(find.text('Versão 9.8.7 (42)'), findsOneWidget);
     await tester.scrollUntilVisible(find.text('Sair'), 250,

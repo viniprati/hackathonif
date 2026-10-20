@@ -9,6 +9,8 @@ abstract interface class SyncStore {
 class PreferencesSyncStore implements SyncStore {
   PreferencesSyncStore(String apiUrl) : _key = 'nativa.manualSync.v1.$apiUrl';
   PreferencesSyncStore.accessibility() : _key = 'nativa.accessibility.v1';
+  PreferencesSyncStore.notifications(String apiUrl)
+      : _key = 'nativa.notifications.v1.$apiUrl';
   final String _key;
   final SharedPreferencesAsync _preferences = SharedPreferencesAsync();
   @override

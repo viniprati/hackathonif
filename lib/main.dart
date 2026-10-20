@@ -24,10 +24,12 @@ class NativaApp extends StatefulWidget {
       this.authRepository,
       this.deliveryRepository,
       this.syncStore,
-      this.accessibilityStore});
+      this.accessibilityStore,
+      this.notificationStore});
   final DeliveryRepository? deliveryRepository;
   final SyncStore? syncStore;
   final SyncStore? accessibilityStore;
+  final SyncStore? notificationStore;
   final AuthRepository? authRepository;
 
   @override
@@ -167,6 +169,8 @@ class _NativaAppState extends State<NativaApp> {
                                   ])));
                             }
                             return AppShell(
+                                authRepository: _authRepository,
+                                notificationStore: widget.notificationStore,
                                 viewModel: _viewModel,
                                 onSignOut: _auth.signOut);
                           })

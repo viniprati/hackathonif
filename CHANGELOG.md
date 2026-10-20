@@ -1,5 +1,15 @@
 # Histórico de versões
 
+## 1.4.0+13 — 20/10/2026
+
+- Navegação inferior sem quebra no meio das palavras e com adaptação ao tamanho das letras.
+- Máscara automática de CPF, preservando o envio de números à API.
+- Central compartilhada de avisos após sincronização e push Android opcional via Firebase, com inscrição autenticada, permissão do sistema e leitura local.
+- Eventos de cadastro e conclusão de todos os alimentos gravados atomicamente com o montante; fila persistida, controle de concorrência e reenvio.
+- Push disponível no Android em builds padrão; exige `android/app/google-services.json` local e configuração Firebase Admin no servidor. Não é necessário passar a flag extra para habilitar o botão.
+- Rota autenticada para conferir a configuração push do backend sem enviar uma mensagem.
+- Credenciais e configuração Firebase locais ignoradas pelo Git. Build incrementado para diferenciar o novo APK do anterior sem push.
+
 ## 1.3.0+12 — 20/10/2026
 
 - Alto contraste persistido no aparelho, disponível na barra superior e no Perfil, compatível com o ajuste de fontes.

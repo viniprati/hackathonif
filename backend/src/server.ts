@@ -1,3 +1,4 @@
+import { firebasePush, dispatchPush } from './push.js';
 import { MongoClient } from 'mongodb';
 import { buildApp } from './app.js';
 import { loadConfig } from './config.js';
@@ -18,7 +19,9 @@ async function main() {
     await db.command({ ping: 1 });
     const repository = new MongoBatchRepository(db);
     await repository.initialize();
+    const push = firebasePush(process.env.FIREBASE_SERVICE_ACCOUNT_JSON);
     app = await buildApp({
+      ...(push ? { push } : {}),
       repository,
       jwtSecret: config.jwtSecret,
       mvpCpf: config.mvpCpf,
@@ -28,7 +31,29 @@ async function main() {
         await db.command({ ping: 1 });
       },
     });
+    let dispatching = false;
+    const pushTimer = push
+      ? setInterval(() => {
+          if (dispatching) return;
+          dispatching = true;
+          void dispatchPush(repository, push)
+            .catch((error: unknown) => {
+              app?.log.error(
+                {
+                  event: 'push_dispatch_failed',
+                  errorType: error instanceof Error ? error.name : 'UnknownError',
+                },
+                'Não foi possível enviar os avisos push; a fila será tentada novamente',
+              );
+            })
+            .finally(() => {
+              dispatching = false;
+            });
+        }, 15000)
+      : undefined;
+    pushTimer?.unref();
     app.addHook('onClose', async () => {
+      if (pushTimer) clearInterval(pushTimer);
       await client.close();
     });
     const shutdown = async () => {

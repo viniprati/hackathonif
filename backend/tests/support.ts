@@ -1,13 +1,35 @@
+import { batchNotifications, type BatchNotification } from '../src/domain/notifications.js';
 import type { Batch } from '../src/domain/batch.js';
 import type { BatchFilter, BatchRepository } from '../src/repositories/batch-repository.js';
 
 export class MemoryRepository implements BatchRepository {
+  private sent = new Set<string>();
+  private claimed = new Set<string>();
+  async pendingNotifications() {
+    return this.activity.filter((n) => !this.sent.has(n.id) && !this.claimed.has(n.id));
+  }
+  async claimNotification(id: string) {
+    if (this.claimed.has(id) || this.sent.has(id)) return false;
+    this.claimed.add(id);
+    return true;
+  }
+  async markNotificationSent(id: string) {
+    this.sent.add(id);
+  }
+  private activity: BatchNotification[] = [];
+  async notifications(offset: number, limit: number) {
+    return structuredClone(this.activity)
+      .sort((a, b) => b.createdAt.localeCompare(a.createdAt) || b.id.localeCompare(a.id))
+      .slice(offset, offset + limit);
+  }
   private batches = new Map<string, Batch>();
   async insert(batch: Batch) {
+    this.activity.push(...batchNotifications(null, batch));
     this.batches.set(batch.id, structuredClone(batch));
   }
   async insertIfAbsent(batch: Batch) {
     if (this.batches.has(batch.id)) return false;
+    this.activity.push(...batchNotifications(null, batch));
     this.batches.set(batch.id, structuredClone(batch));
     return true;
   }
@@ -34,6 +56,7 @@ export class MemoryRepository implements BatchRepository {
   }
   async replace(batch: Batch, expectedRevision: number) {
     if (this.batches.get(batch.id)?.revision !== expectedRevision) return false;
+    this.activity.push(...batchNotifications(this.batches.get(batch.id)!, batch));
     this.batches.set(batch.id, structuredClone(batch));
     return true;
   }
