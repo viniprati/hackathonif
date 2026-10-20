@@ -1,5 +1,10 @@
 # Histórico de versões
 
+## 1.2.0+10 — 20/10/2026
+
+- Versão menor incrementada para identificar a nova funcionalidade de sincronização manual introduzida no build 9.
+- Backend alinhado à versão 1.2.0 e build Android incrementado para 10, permitindo atualização sobre o APK anterior.
+
 ## 1.1.0+9 — 20/10/2026
 
 - Sincronização manual pelo Perfil: envio dos montantes e rateios e consulta aos dados compartilhados do MongoDB.
