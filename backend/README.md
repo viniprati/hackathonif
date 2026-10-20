@@ -16,7 +16,7 @@ Backend inicial em TypeScript para o MVP, separado do aplicativo Flutter. Usa Fa
 
 A API inicia sem montantes fictícios. Os catálogos e as notas são referências fixas copiadas do projeto, não consultas automáticas às escolas, associações ou serviços de notas fiscais.
 
-**O Flutter ainda usa o repositório local em memória.** A integração HTTP, a troca do login de demonstração do Flutter pelo JWT e a persistência das preferências da interface são etapas seguintes. O PDF continua sendo gerado pelo Flutter; esta API retorna relatórios em JSON, com os dados necessários para gráficos e documentos.
+**O Flutter ainda usa o repositório local em memória.** O login Flutter já usa JWT desta API. A integração dos montantes e relatórios e a persistência das preferências da interface são etapas seguintes. O PDF continua sendo gerado pelo Flutter; esta API retorna relatórios em JSON, com os dados necessários para gráficos e documentos.
 
 ## Pré-requisitos e configuração
 
@@ -94,7 +94,7 @@ Cadastre `MONGO_URI`, `MONGO_DB_NAME`, `JWT_SECRET`, `MVP_CPF` e `MVP_PASSWORD` 
 
 `NODE_ENV=production` encerra esta API por decisão explícita da configuração atual. Usar `development` permite a demonstração, mas não implementa usuários, permissões ou autenticação apropriados para uso real. A URL pública e as variáveis efetivas do Railway precisam ser conferidas no ambiente publicado; esta seção descreve o contrato esperado, não comprova um deploy.
 
-O Flutter atual não possui URL de API nem alternância entre desenvolvimento e demonstração: continua usando dados locais em memória. Publicar esta API não conecta automaticamente o APK ou o site ao MongoDB.
+O Flutter usa `API_BASE_URL` via `--dart-define`, com padrão `https://hackathonif-production.up.railway.app`. O login já consulta a API; os montantes continuam em memória no Flutter. Configure `CORS_ORIGINS` para permitir o login pelo navegador. O APK usa HTTPS e não depende de CORS.
 
 ## Endpoints
 
@@ -188,7 +188,7 @@ tests/integration/            MongoDB local temporário
 
 ## Próximos passos
 
-- Integrar o repositório e o login do Flutter à API, incluindo armazenamento seguro do token e tratamento de sessão expirada/conflitos.
+- Integrar o repositório de montantes Flutter à API, incluindo tratamento de falhas e conflitos. O login já está integrado; o token permanece apenas em memória e a sessão expirada retorna ao login.
 - Substituir a conta local de demonstração por usuários persistidos, perfis de acesso e recuperação de senha.
 - Definir hospedagem, HTTPS, configuração de proxy e estratégia de backup.
 - Substituir as três escolas provisórias pelo catálogo oficial e validar o fluxo com a associação.

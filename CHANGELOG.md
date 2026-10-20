@@ -1,5 +1,13 @@
 # Histórico de versões
 
+## 1.1.0+6 — 19/10/2026
+
+- Login Flutter integrado ao backend: autenticação JWT, rejeição de credenciais inválidas, estados de carregamento/erro e encerramento de sessão ao sair ou expirar.
+- URL de API configurável por `API_BASE_URL`, com padrão apontando para o Railway da demonstração. Permissão de internet incluída no Android release.
+- Perfil consulta a versão real do pacote instalado em vez de exibir texto fixo. Build Android incrementado para 6.
+- Testes de autenticação HTTP e da interface, incluindo senha incorreta e versão do pacote.
+- Os montantes e relatórios do Flutter continuam locais em memória; somente o login foi integrado nesta correção.
+
 ## 1.1.0+5 — 19/10/2026
 
 - API REST TypeScript com Fastify, login JWT de demonstração e persistência MongoDB.

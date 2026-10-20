@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../theme.dart';
+import '../app_version_tile.dart';
 import '../view_models/delivery_view_model.dart';
 import 'batch_screen.dart';
 import 'home_screen.dart';
@@ -200,11 +201,7 @@ class ProfileScreen extends StatelessWidget {
                       subtitle: Text('Aprovista'),
                     ),
                     Divider(height: 1),
-                    ListTile(
-                      leading: Icon(Icons.info_outline),
-                      title: Text('Versão'),
-                      subtitle: Text('Versão 1.0.4'),
-                    ),
+                    AppVersionTile(),
                   ],
                 ),
               ),

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:nativa/main.dart';
+import '../../support/test_app.dart';
 import 'package:nativa/data/delivery_repository.dart';
 import 'package:nativa/domain/models.dart';
 import 'package:nativa/ui/screens/batch_forms.dart';
@@ -8,7 +8,7 @@ import 'package:nativa/ui/view_models/delivery_view_model.dart';
 import 'package:nativa/ui/theme.dart';
 
 Future<void> signIn(WidgetTester tester) async {
-  await tester.pumpWidget(const NativaApp());
+  await tester.pumpWidget(testApp(tester));
   await tester.enterText(find.byType(TextFormField).at(0), '12345678901');
   await tester.enterText(find.byType(TextFormField).at(1), 'senha');
   await tester.tap(find.text('Entrar'));
