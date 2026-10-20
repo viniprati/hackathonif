@@ -74,6 +74,28 @@ A inicialização conecta ao MongoDB, verifica `ping` e cria o índice da coleç
 
 Se `db:check` indicar autenticação recusada, revise o usuário de banco e a senha da URI no arquivo local. Caracteres reservados da senha precisam estar codificados na URI. A criação da conta de teste do aplicativo não altera as credenciais do MongoDB.
 
+## Demonstração no Railway
+
+Configuração esperada do serviço (os valores do painel não são versionados):
+
+| Opção            | Valor                                                                    |
+| ---------------- | ------------------------------------------------------------------------ |
+| Root Directory   | `backend`                                                                |
+| Build Command    | `npm ci --include=dev && npm run build`                                  |
+| Start Command    | `npm start`                                                              |
+| Healthcheck Path | `/health/ready`                                                          |
+| `NODE_ENV`       | `development` para esta demonstração com conta única                     |
+| `HOST`           | `0.0.0.0`                                                                |
+| `PORT`           | Utilizar a porta fornecida pelo Railway; o código lê `process.env.PORT`. |
+
+O compilador TypeScript é uma dependência de desenvolvimento, por isso o build instala também essas dependências. O início executa o JavaScript compilado de `dist/server.js`, sem modo watch.
+
+Cadastre `MONGO_URI`, `MONGO_DB_NAME`, `JWT_SECRET`, `MVP_CPF` e `MVP_PASSWORD` nas variáveis privadas do serviço, conforme a tabela de configuração. Arquivos locais de ambiente não são enviados ao GitHub. Autorize a conexão do ambiente de hospedagem no Atlas e configure `CORS_ORIGINS` com as origens HTTPS exatas da interface Web, sem caminho ou barra final.
+
+`NODE_ENV=production` encerra esta API por decisão explícita da configuração atual. Usar `development` permite a demonstração, mas não implementa usuários, permissões ou autenticação apropriados para uso real. A URL pública e as variáveis efetivas do Railway precisam ser conferidas no ambiente publicado; esta seção descreve o contrato esperado, não comprova um deploy.
+
+O Flutter atual não possui URL de API nem alternância entre desenvolvimento e demonstração: continua usando dados locais em memória. Publicar esta API não conecta automaticamente o APK ou o site ao MongoDB.
+
 ## Endpoints
 
 Base local: `http://127.0.0.1:3000`. Todas as rotas `/v1`, exceto o login, exigem `Authorization: Bearer SEU_TOKEN`. Tokens e senhas nunca devem ser enviados pela URL.
